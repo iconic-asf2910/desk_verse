@@ -1,6 +1,8 @@
 import React from "react";
+import useAuth from "../../hooks/UseAuth";
 
 const Navbar = () => {
+  const { logout } = useAuth();
   return (
     <div>
       <div>logo</div>
@@ -12,6 +14,8 @@ const Navbar = () => {
       </div>
       <div>
         <button> Profile</button>
+
+        <button onClick={logout}>Logout</button>
       </div>
     </div>
   );

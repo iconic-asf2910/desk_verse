@@ -1,26 +1,30 @@
 import { useState } from "react";
 import useAuth from "../../hooks/UseAuth";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const { signup } = useAuth();
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-const [error, setError] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  try {
-    await signup(name, email, password);
-  } catch (error) {
-   setError(error.message);
-  }
-};
+    e.preventDefault();
+  setError("");
+  
+    try {
+      await signup(name, email, password);
+      navigate("/");
+    } catch (error) {
+      setError(error.message);
+    }
+  };
   return (
     <div>
-    <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           required
