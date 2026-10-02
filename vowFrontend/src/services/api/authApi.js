@@ -18,5 +18,26 @@ const loginUser = async (email, password) => {
 
   return data;
 };
+const signupUser = async (name, email, password) => {
+  const response = await fetch("BACKEND_SIGNUP_URL", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      email,
+      password,
+    }),
+  });
 
-export { loginUser };
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Signup failed");
+  }
+
+  return data;
+};
+
+export { loginUser ,signupUser};

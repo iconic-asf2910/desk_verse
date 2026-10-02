@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createContext } from "react";
 
-import { loginUser } from "../services/api/authApi";
+import { loginUser, signupUser } from "../services/api/authApi";
 const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
@@ -14,9 +14,15 @@ const login = async (email, password) => {
      setToken(data.token);
 };
 
+const signup = async (name, email, password) => {
+  const data = await signupUser(name, email, password);
+
+  setUser(data.user);
+  setToken(data.token);
+};
 
   return (
-    <AuthContext.Provider value={{user ,token , login}}>
+    <AuthContext.Provider value={{user ,token , login ,signup}}>
       {children}
     </AuthContext.Provider>
   );
