@@ -27,7 +27,7 @@ const Features = () => {
   ];
 
   return (
-    <section>
+   <section id="features">
       <h2>Everything Your Team Needs</h2>
 
       <div>

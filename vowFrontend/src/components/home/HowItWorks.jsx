@@ -18,7 +18,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section>
+    <section id="how-it-works">
       <h2>How VOW Works</h2>
 
       <div>
