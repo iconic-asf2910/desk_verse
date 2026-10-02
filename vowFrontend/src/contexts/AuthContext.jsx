@@ -15,6 +15,7 @@ const [token, setToken] = useState(
 
 const login = async (email, password) => {
    const data = await loginUser(email, password);
+   
      setUser(data.user);
      setToken(data.token);
      localStorage.setItem("user", JSON.stringify(data.user));
