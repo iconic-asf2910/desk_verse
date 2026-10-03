@@ -37,7 +37,7 @@ with layout_col1:
     if audio_data:
         st.session_state.audio_bytes = audio_data['bytes']
 
-        st.success['Audio Captured successfully!']
+        st.success('Audio Captured successfully!')
 
         st.audio(st.session_state.audio_bytes, format= 'audio/wav')
 
@@ -53,7 +53,7 @@ with layout_col1:
 
                 with open(temp_filename, 'rb')as audio_file:
                     transcript_response = client.audio.transcriptions.create(
-                        model= 'whisper-1'
+                        model= 'whisper-1',
                         file= audio_file
                     )
 
@@ -64,8 +64,8 @@ with layout_col1:
                         model= 'gpt-4o',
                         messages=[
                             {
-                                'role': 'system'
-                                content : (
+                                'role': 'system',
+                                'content': (
                                     "You are an elite executive assistant. Take the following unedited audio transcript "
                                     "and turn it into structured , professional meeting minutes. Include: \n"
                                     "1. Executive Summary\n"
@@ -123,7 +123,28 @@ with down_col1:
 with down_col2:
     if st.session_state.transcript:
         st.download_button(
-            label = 'Save Transcript'
+            label = 'Save Transcript (.txt)',
+            data = st.session_state.transcript,
+            file_name= 'meeting_transcript.txt',
+            mime= 'text/plain'
         )
+
+    else:
+        st.button('Save Transcript (.txt)', disabled= True)
+
+with down_col3:
+
+    if st.session_state.meeting_notes:
+        st.download_button(
+        label = 'Save AI Meeting Notes (.md)',
+        data = st.session_state.meeting_notes.md,
+        file_name= 'ai_meeting_notes.md',
+        mime = 'text/markdown'
+        )
+
+    else:
+        st.button('Save AI Meeting Notes (.md)', disabled= True)
+     
+         
             
         
