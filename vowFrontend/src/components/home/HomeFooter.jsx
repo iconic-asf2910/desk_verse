@@ -1,6 +1,6 @@
 const HomeFooter = () => {
   return (
-    <footer className="bg-slate-900 text-white">
+    <footer className="bg-[#111827] text-white">
       <div className="px-14 py-9">
         <div className="grid grid-cols-6 gap-8">
           <div>
@@ -65,17 +65,7 @@ const HomeFooter = () => {
           <div>
             <h3 className="text-xs">Stay Updated</h3>
 
-            <div className="mt-2 flex">
-              <input
-                type="email"
-                placeholder="Enter Your Email"
-                className="h-5 w-28 rounded-l bg-white px-2 text-xs text-gray-700 outline-none"
-              />
-
-              <button className="h-5 rounded-r bg-blue-600 px-2 text-xs text-white">
-                Sign Up
-              </button>
-            </div>
+           
 
             <div className="mt-3 flex gap-3 text-xs">
               <span>in</span>

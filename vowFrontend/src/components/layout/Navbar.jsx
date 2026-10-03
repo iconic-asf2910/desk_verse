@@ -12,9 +12,15 @@ const Navbar = () => {
     <header className="flex h-16 bg-[#f3f4f6]">
       <Link
         to="/dashboard"
-        className="flex w-55 items-center bg-[#111827] px-6 text-2xl font-semibold tracking-tight text-white"
+        className="flex w-55 items-center gap-3 bg-[#111827] px-6 text-xl font-semibold tracking-tight text-white"
       >
-        DeskVerse
+        <img
+          src="/logo.png"
+          alt="DeskVerse"
+          className="h-9 w-9 object-contain"
+        />
+
+        <span>DeskVerse</span>
       </Link>
 
       <div className="flex flex-1 items-center justify-end border-b border-slate-300 px-6">

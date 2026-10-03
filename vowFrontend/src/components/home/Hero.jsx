@@ -29,7 +29,7 @@ const Hero = () => {
             href="#how-it-works"
             className="rounded-md border border-gray-400 px-2 py-1.5 text-xs text-gray-800 hover:bg-gray-100"
           >
-            ◉ Watch Demo
+            ◉ How It Works
           </a>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import HomeFooter from "../home/HomeFooter";
 import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
@@ -10,9 +11,13 @@ const MainLayout = () => {
       <div className="flex">
         <Sidebar />
 
-        <main className="min-w-0 flex-1">
-          <Outlet />
-        </main>
+        <div className="min-w-0 flex-1">
+          <main>
+            <Outlet />
+          </main>
+
+          <HomeFooter />
+        </div>
       </div>
     </div>
   );
