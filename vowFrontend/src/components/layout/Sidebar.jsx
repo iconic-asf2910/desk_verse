@@ -13,7 +13,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="min-h-[calc(100vh-4rem)] w-60 bg-[#111827] px-4 py-6">
+    <aside className="min-h-[calc(100vh-4rem)] w-55 bg-[#111827] px-4 py-6">
       <nav className="space-y-2">
         {links.map((link) => (
           <NavLink

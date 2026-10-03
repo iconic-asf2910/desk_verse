@@ -12,7 +12,7 @@ const Navbar = () => {
     <header className="flex h-16 bg-[#f3f4f6]">
       <Link
         to="/dashboard"
-        className="flex w-60 items-center bg-[#111827] px-6 text-2xl font-semibold tracking-tight text-white"
+        className="flex w-55 items-center bg-[#111827] px-6 text-2xl font-semibold tracking-tight text-white"
       >
         DeskVerse
       </Link>

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [workspace, setWorkspace] = useState("Acme Corp HQ");
+  const navigate = useNavigate();
 
   const rooms = [
     {
@@ -43,7 +45,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-5">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-1">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">
           Workspace Manager
@@ -73,6 +75,7 @@ const Dashboard = () => {
               <button
                 key={room.id}
                 type="button"
+                onClick={() => navigate(`/rooms/${room.id}`)}
                 className={`absolute ${room.position} flex flex-col items-center justify-center text-center`}
               >
                 <span className="text-xs font-medium text-slate-800">
@@ -148,7 +151,7 @@ const Dashboard = () => {
       <div className="mt-1 flex justify-center">
         <button
           type="button"
-          className="rounded-md bg-blue-600 px-6 py-2.5  text-sm font-medium mr-68 text-white hover:bg-blue-700"
+          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium mr-68 text-white hover:bg-blue-700"
         >
           + Add Room
         </button>
