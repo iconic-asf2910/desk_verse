@@ -18,6 +18,7 @@ import Chat from "../pages/chat/Chat";
 import Tasks from "../pages/tasks/Tasks";
 import Polls from "../pages/polls/Polls";
 import Analytics from "../pages/analytics/Analytics";
+import JoinMeeting from "../pages/meetings/JoinMeeting";
 
 const AppRoutes = () => {
   return (
@@ -42,6 +43,8 @@ const AppRoutes = () => {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/polls" element={<Polls />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/meetings/:id/join" element={<JoinMeeting />} />
+        
       </Route>
     </Routes>
   );

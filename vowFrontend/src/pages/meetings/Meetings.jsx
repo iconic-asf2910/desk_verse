@@ -10,26 +10,55 @@ const Meetings = () => {
   }, []);
 
   return (
-    <div>
-      <h1>Meetings</h1>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-8 py-7">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Meetings
+        </h1>
 
-      <Link to="/meetings/create">Create Meeting</Link>
+        <Link
+          to="/meetings/create"
+          className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          + Create Meeting
+        </Link>
+      </div>
 
-      {meetings.length === 0 ? (
-        <p>No meetings found.</p>
-      ) : (
-        meetings.map((meeting) => (
-          <div key={meeting.id}>
-            <h2>{meeting.title}</h2>
-            <p>{meeting.description}</p>
-            <p>{meeting.startTime}</p>
+      <div className="mt-6">
+        {meetings.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            No meetings found.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {meetings.map((meeting) => (
+              <div
+                key={meeting.id}
+                className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <h2 className="text-base font-semibold text-slate-900">
+                  {meeting.title}
+                </h2>
 
-            <Link to={`/meetings/${meeting.id}`}>
-              View Meeting
-            </Link>
+                <p className="mt-2 text-sm text-slate-500">
+                  {meeting.description}
+                </p>
+
+                <p className="mt-4 text-sm text-slate-600">
+                  Starts: {meeting.startTime}
+                </p>
+
+                <Link
+                  to={`/meetings/${meeting.id}`}
+                  className="mt-4 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  View Meeting →
+                </Link>
+              </div>
+            ))}
           </div>
-        ))
-      )}
+        )}
+      </div>
     </div>
   );
 };

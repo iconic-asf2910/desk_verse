@@ -19,6 +19,15 @@ const Dashboard = () => {
     6: "left-[75%] bottom-[5%] w-[27%] h-[32%]",
   };
 
+  const roomCharacters = {
+    1: "/boy1.png",
+    2: "/boy2.png",
+    3: "/boy3.png",
+    4: "/boy4.png",
+    5: "/boy5.png",
+    6: "/boy6.png",
+  };
+
   const handleAddRoom = (event) => {
     event.preventDefault();
 
@@ -86,7 +95,7 @@ const Dashboard = () => {
                     event.stopPropagation();
                     handleRemoveRoom(room.id);
                   }}
-                  className="absolute left-11  flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-red-400 text-[10px] font-medium leading-none text-red-500 hover:bg-red-50"
+                  className="absolute left-11 flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-red-400 text-[10px] font-medium leading-none text-red-500 hover:bg-red-50"
                 >
                   ×
                 </span>
@@ -102,7 +111,7 @@ const Dashboard = () => {
                       className="flex flex-col items-center"
                     >
                       <img
-                        src="/manprofile.png"
+                        src={roomCharacters[room.id] || "/manprofile.png"}
                         alt={person}
                         className="h-8 w-8 rounded-full object-cover"
                       />
@@ -165,7 +174,7 @@ const Dashboard = () => {
         <button
           type="button"
           onClick={() => setShowAddRoom(true)}
-          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium mr-68 text-white hover:bg-blue-700"
+          className="mr-68 rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
           + Add Room
         </button>
