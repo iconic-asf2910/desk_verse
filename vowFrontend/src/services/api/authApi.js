@@ -1,5 +1,7 @@
 const loginUser = async (email, password) => {
-  const response = await fetch("BACKEND_LOGIN_URL", {
+  const response = await fetch(
+  `${import.meta.env.VITE_API_URL}/api/auth/login`,
+  {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,7 +21,7 @@ const loginUser = async (email, password) => {
   return data;
 };
 const signupUser = async (name, email, password) => {
-  const response = await fetch("BACKEND_SIGNUP_URL", {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

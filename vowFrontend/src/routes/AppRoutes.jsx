@@ -21,7 +21,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      <Route element={<ProtectedRoute />}>
+     
         <Route element={<MainLayout />}>
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -41,7 +41,7 @@ const AppRoutes = () => {
           <Route path="/analytics" element={<Analytics />} />
           */}
         </Route>
-      </Route>
+      
     </Routes>
   );
 };
