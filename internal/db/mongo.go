@@ -12,6 +12,7 @@ import (
 )
 
 var Client *mongo.Client
+var DB *mongo.Database
 
 func Connect() error {
 	uri := os.Getenv("MONGO_URI")
@@ -38,6 +39,7 @@ func Connect() error {
 	}
 
 	Client = client
+	DB = client.Database(dbName)
 	fmt.Printf("Connected successfully to MongoDB database: %s\n", dbName)
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
 	"github.com/joho/godotenv"
 )
@@ -24,6 +25,8 @@ func main() {
 	}
 
 	http.HandleFunc("/health", healthHandler)
+	http.HandleFunc("/api/auth/signup", auth.Signup)
+	http.HandleFunc("/api/auth/login", auth.Login)
 
 	fmt.Println("VOW backend running on :8080")
 
