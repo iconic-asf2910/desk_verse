@@ -25,7 +25,7 @@ if 'audio_bytes' not in st.session_state:
 layout_col1, layout_col2 = st.columns([1, 2])
 
 with layout_col1:
-    st.header('1, Capture Audio')
+    st.header('1. Capture Audio')
     st.write('Click below to start recording.')
 
     audio_data = mic_recorder(
@@ -90,6 +90,40 @@ with layout_col2:
 
     st.header('2. Live Transcripts and AI Insights')
 
-    tab1, tab2 =     
+    tab1, tab2 =  st.tabs(['📝Raw Transcript', '🤖 Structured meeting Notes'])
+
+    with tab1:
+        if st.session_state.transcript:
+            st.text_area('Live Transcription Output', st.session_state.transcript, height=350)
+        else:
+            st.info('Your raw transcript text will appear here after processing.')
+
+    with tab2:
+        if st.session_state.meeting_notes:
+            st.markdown(st.session_state.meeting_notes)
+        else:
+            st.info('Your structured layout will appear here.')
+
+st.markdown('---')
+st.header('3. Download and Save Center')
+
+down_col1, down_col2, down_col3 = st.columns(3)
+
+with down_col1:
+    if st.session_state.audio_bytes:
+        st.download_button(
+            label = 'Save Raw Audio Recording (.wav)',
+            data= st.session_state.audio_bytes,
+            file_name= 'meeting_recording.wav',
+            mime= 'audio/wav'
+        )
+    else:
+        st.button('Save Raw Audio Recording (.wav)', disabled = True)
+
+with down_col2:
+    if st.session_state.transcript:
+        st.download_button(
+            label = 'Save Transcript'
+        )
             
         
