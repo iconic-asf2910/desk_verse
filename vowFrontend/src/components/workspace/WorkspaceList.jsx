@@ -1,26 +1,33 @@
-import useWorkspace from "../../hooks/UseWorkspace";
 import { useNavigate } from "react-router-dom";
+import useWorkspace from "../../hooks/UseWorkspace";
 
 const WorkspaceList = () => {
   const { workspaces, setWorkspace } = useWorkspace();
   const navigate = useNavigate();
 
-  const handleSelect = (workspace) => {
+  const handleWorkspaceClick = (workspace) => {
     setWorkspace(workspace);
     navigate(`/workspaces/${workspace.id}`);
   };
 
   return (
-    <div>
-      {workspaces.map((workspace) => (
-        <div
-          key={workspace.id}
-          onClick={() => handleSelect(workspace)}
-        >
-          {workspace.name}
-        </div>
-      ))}
-    </div>
+    <section>
+      <h2>Workspaces</h2>
+
+      {workspaces.length === 0 ? (
+        <p>No workspaces available.</p>
+      ) : (
+        workspaces.map((workspace) => (
+          <button
+            key={workspace.id}
+            type="button"
+            onClick={() => handleWorkspaceClick(workspace)}
+          >
+            {workspace.name}
+          </button>
+        ))
+      )}
+    </section>
   );
 };
 

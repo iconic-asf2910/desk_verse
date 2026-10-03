@@ -1,8 +1,8 @@
-const WorkspaceHeader = () => {
+const WorkspaceHeader = ({ workspace }) => {
   return (
     <section>
-      <h1>Workspace</h1>
-      <p>Select a room to start collaborating with your team.</p>
+      <h1>{workspace?.name || "Workspace"}</h1>
+      <p>{workspace?.description || "Manage your workspace and rooms."}</p>
     </section>
   );
 };

@@ -5,14 +5,16 @@ import RoomList from "../../components/workspace/RoomList";
 
 const WorkspaceDetails = () => {
   const { id } = useParams();
-  const { workspace } = useWorkspace();
+  const { workspace, workspaces } = useWorkspace();
+
+  const currentWorkspace =
+    workspace ||
+    workspaces.find((item) => String(item.id) === String(id));
 
   return (
     <div>
-      <WorkspaceHeader />
-
+      <WorkspaceHeader workspace={currentWorkspace} />
       <p>Workspace ID: {id}</p>
-
       <RoomList />
     </div>
   );

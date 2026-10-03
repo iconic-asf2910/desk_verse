@@ -7,9 +7,13 @@ const Profile = () => {
     <div>
       <h1>Profile</h1>
 
-      <p>Name: {user?.name}</p>
-      <p>Email: {user?.email}</p>
-      <p>Role: {user?.role}</p>
+      <section>
+        <h2>{user?.name || "User"}</h2>
+        <p>{user?.email || "No email available"}</p>
+        <p>{user?.role || "No role available"}</p>
+
+        <button type="button">Edit Profile</button>
+      </section>
     </div>
   );
 };
