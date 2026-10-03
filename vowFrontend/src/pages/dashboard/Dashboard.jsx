@@ -11,12 +11,12 @@ const Dashboard = () => {
   const { rooms, addRoom, removeRoom } = useRoom();
 
   const roomPositions = {
-    1: "left-[3%] top-[18%] w-[34%] h-[38%]",
+    1: "left-[3%] top-[10%] w-[34%] h-[38%]",
     2: "left-[38%] top-[10%] w-[25%] h-[36%]",
-    3: "right-[3%] top-[10%] w-[28%] h-[38%]",
+    3: "left-[75%] top-[10%] w-[28%] h-[38%]",
     4: "left-[3%] bottom-[5%] w-[34%] h-[38%]",
     5: "left-[38%] bottom-[5%] w-[27%] h-[38%]",
-    6: "right-[3%] bottom-[5%] w-[27%] h-[32%]",
+    6: "left-[75%] bottom-[5%] w-[27%] h-[32%]",
   };
 
   const handleAddRoom = (event) => {
@@ -66,7 +66,7 @@ const Dashboard = () => {
         <div className="flex min-h-[520px] items-center justify-center rounded-lg border border-slate-300 bg-white p-5">
           <div className="relative w-[78%] max-w-[700px]">
             <img
-              src="/group.png"
+              src="/group2.jpeg"
               alt="Workspace floor plan"
               className="block w-full"
             />
@@ -86,7 +86,7 @@ const Dashboard = () => {
                     event.stopPropagation();
                     handleRemoveRoom(room.id);
                   }}
-                  className="absolute left-1 top-1 flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-red-400 text-[10px] font-medium leading-none text-red-500 hover:bg-red-50"
+                  className="absolute left-11  flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-red-400 text-[10px] font-medium leading-none text-red-500 hover:bg-red-50"
                 >
                   ×
                 </span>
