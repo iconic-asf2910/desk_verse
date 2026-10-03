@@ -12,16 +12,15 @@ const Rooms = () => {
       {rooms.length === 0 ? (
         <p>No rooms available.</p>
       ) : (
-        <div>
-          {rooms.map((room) => (
-            <button
-              key={room.id}
-              onClick={() => navigate(`/rooms/${room.id}`)}
-            >
-              {room.name}
-            </button>
-          ))}
-        </div>
+        rooms.map((room) => (
+          <button
+            key={room.id}
+            type="button"
+            onClick={() => navigate(`/rooms/${room.id}`)}
+          >
+            {room.name}
+          </button>
+        ))
       )}
     </div>
   );
