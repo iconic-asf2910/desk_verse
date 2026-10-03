@@ -1,40 +1,58 @@
 const Features = () => {
   const features = [
     {
-      title: "Virtual Workspaces",
-      description: "Organize teams and work in dedicated virtual spaces.",
+      title: "Virtual Office & Spaces",
+      description:
+        "Custom digital offices with interactive layouts and presence indicators.",
+      image: "/tab.png",
     },
     {
-      title: "Meetings",
-      description: "Join real-time audio and video meetings with your team.",
+      title: "Real-Time Collaboration",
+      description:
+        "Video conferencing with spatial audio to simulate proximity-based conversations.",
+      image: "/man.png",
     },
     {
-      title: "Team Chat",
-      description: "Communicate with individuals and teams in real time.",
+      title: "Smart Meeting Hub",
+      description:
+        "Schedule directly, smart reminders, and AI meeting summaries.",
+      image: "/video.png",
     },
     {
-      title: "Task Management",
-      description: "Create, assign, and track tasks across your workspace.",
-    },
-    {
-      title: "Polls",
-      description: "Create polls and collect decisions from your team.",
-    },
-    {
-      title: "Analytics",
-      description: "Track team activity, meetings, and engagement.",
+      title: "Project Tracker",
+      description:
+        "Integrated task management with role-based assignments.",
+      image: "/projector.png",
     },
   ];
 
   return (
-   <section id="features">
-      <h2>Everything Your Team Needs</h2>
+    <section className="bg-white px-14 pb-8">
+      <h2 className="mb-6 text-xl font-normal text-black">
+        The ___ Experience
+      </h2>
 
-      <div>
+      <div className="grid grid-cols-4 gap-12">
         {features.map((feature) => (
-          <div key={feature.title}>
-            <h3>{feature.title}</h3>
-            <p>{feature.description}</p>
+          <div
+            key={feature.title}
+            className="h-36 rounded-lg border border-slate-500 bg-gray-300 px-4 py-3"
+          >
+            <div className="flex h-12 justify-center">
+              <img
+                src={feature.image}
+                alt={feature.title}
+                className="h-12 w-12 object-contain"
+              />
+            </div>
+
+            <h3 className="mt-2 text-sm font-medium text-black">
+              {feature.title}
+            </h3>
+
+            <p className="mt-1 text-xs font-medium leading-3 text-slate-600">
+              {feature.description}
+            </p>
           </div>
         ))}
       </div>

@@ -1,14 +1,14 @@
-import Hero from "../../components/home/hero";
+import HomeNavbar from "../../components/home/HomeNavbar";
+import Hero from "../../components/home/Hero";
 import Features from "../../components/home/Features";
 import HowItWorks from "../../components/home/HowItWorks";
 import CTA from "../../components/home/CTA";
 import HomeFooter from "../../components/home/HomeFooter";
-import HomeNavbar from "../../components/home/HomeNavbar";
 
 const Home = () => {
   return (
-    <div>
-        <HomeNavbar />
+    <div className="min-h-screen bg-white">
+      <HomeNavbar />
       <Hero />
       <Features />
       <HowItWorks />

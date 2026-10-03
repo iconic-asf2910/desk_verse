@@ -2,19 +2,20 @@ import { Link } from "react-router-dom";
 
 const CTA = () => {
   return (
-    <section>
-      <h2>Ready to Get Started?</h2>
+    <section className="bg-slate-100 px-14 py-16 text-center">
+      <h2 className="text-3xl font-semibold text-black">
+        Ready to Get Started?
+      </h2>
 
-      <p>
-        Create your VOW account and start collaborating with your team.
+      <p className="mt-3 text-gray-600">
+        Create your workspace and start collaborating with your team.
       </p>
 
-      <Link to="/signup">
+      <Link
+        to="/signup"
+        className="mt-6 inline-block rounded-md bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+      >
         Get Started
-      </Link>
-
-      <Link to="/login">
-        Login
       </Link>
     </section>
   );

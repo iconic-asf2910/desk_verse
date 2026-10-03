@@ -1,32 +1,47 @@
 const HowItWorks = () => {
   const steps = [
     {
-      step: "01",
+      number: "01",
       title: "Create Your Account",
-      description: "Sign up and create your VOW account.",
+      description: "Sign up and create your workspace.",
     },
     {
-      step: "02",
+      number: "02",
       title: "Join Your Workspace",
-      description: "Access the workspace and rooms assigned to you.",
+      description:
+        "Enter your virtual workspace and connect with your team.",
     },
     {
-      step: "03",
+      number: "03",
       title: "Collaborate",
-      description: "Chat, meet, manage tasks, and interact with your team.",
+      description:
+        "Meet, communicate, and manage your work together.",
     },
   ];
 
   return (
-    <section id="how-it-works">
-      <h2>How VOW Works</h2>
+    <section
+      id="how-it-works"
+      className="bg-white px-14 py-16"
+    >
+      <h2 className="mb-8 text-2xl font-normal text-black">
+        How It Works
+      </h2>
 
-      <div>
-        {steps.map((item) => (
-          <div key={item.step}>
-            <span>{item.step}</span>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
+      <div className="grid grid-cols-3 gap-10">
+        {steps.map((step) => (
+          <div key={step.number}>
+            <span className="text-sm text-gray-400">
+              {step.number}
+            </span>
+
+            <h3 className="mt-3 text-lg font-medium text-black">
+              {step.title}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-gray-500">
+              {step.description}
+            </p>
           </div>
         ))}
       </div>
