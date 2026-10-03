@@ -5,6 +5,9 @@ import { getMeetings } from "../../utils/meetingStorage";
 
 const Meetings = () => {
   const [meetings, setMeetings] = useState([]);
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,8 +19,18 @@ const Meetings = () => {
     "/boy2.png",
     "/boy3.png",
     "/boy4.png",
-    
+    "/boy5.png",
+    "/boy6.png",
   ];
+
+  const filteredMeetings = meetings.filter((meeting) => {
+    const searchText = search.toLowerCase();
+
+    return (
+      meeting.title.toLowerCase().includes(searchText) ||
+      meeting.description.toLowerCase().includes(searchText)
+    );
+  });
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f5f6f8] px-5 py-5">
@@ -27,9 +40,26 @@ const Meetings = () => {
         </h1>
 
         <div className="flex items-center gap-2">
+          {showSearch && (
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search meetings..."
+              autoFocus
+              className="w-56 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+            />
+          )}
+
           <button
             type="button"
-            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"
+            onClick={() => {
+              setShowSearch((previous) => !previous);
+              if (showSearch) {
+                setSearch("");
+              }
+            }}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
             <Search size={16} strokeWidth={1.8} />
             Search
@@ -45,14 +75,16 @@ const Meetings = () => {
       </div>
 
       <div className="space-y-5">
-        {meetings.length === 0 ? (
+        {filteredMeetings.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <p className="text-sm text-slate-500">
-              No meetings found.
+              {search
+                ? "No meetings match your search."
+                : "No meetings found."}
             </p>
           </div>
         ) : (
-          meetings.map((meeting, index) => (
+          filteredMeetings.map((meeting, index) => (
             <div
               key={meeting.id}
               className="rounded-xl border border-slate-300 bg-white px-4 py-4 shadow-[0_2px_6px_rgba(0,0,0,0.18)]"
