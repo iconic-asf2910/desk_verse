@@ -1,8 +1,8 @@
-const RoomMembers = () => {
+const RoomMembers = ({ room }) => {
   return (
     <section>
       <h2>Room Members</h2>
-      <p>Members currently in this room will appear here.</p>
+      <p>Members of {room?.name || "this room"} will appear here.</p>
     </section>
   );
 };

@@ -1,9 +1,10 @@
-import React from 'react'
-
 const Polls = () => {
   return (
-    <div>Polls</div>
-  )
-}
+    <div>
+      <h1>Polls</h1>
+      <p>Create and participate in team polls here.</p>
+    </div>
+  );
+};
 
-export default Polls
+export default Polls;

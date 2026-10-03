@@ -1,9 +1,9 @@
-import React from 'react'
-
 const Analytics = () => {
   return (
-    <div>Analytics</div>
-  )
-}
-
-export default Analytics
+    <div>
+      <h1>Analytics</h1>
+      <p>Workspace and team analytics will appear here.</p>
+    </div>
+  );
+};
+export default Analytics;

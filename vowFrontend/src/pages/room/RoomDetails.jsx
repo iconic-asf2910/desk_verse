@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom";
 import useRoom from "../../hooks/UseRoom";
-
 import RoomHeader from "../../components/room/RoomHeader";
 import RoomMembers from "../../components/room/RoomMembers";
 import RoomPresence from "../../components/room/RoomPresence";
@@ -9,22 +8,20 @@ import RoomMeeting from "../../components/room/RoomMeeting";
 
 const RoomDetails = () => {
   const { id } = useParams();
-  const { room, rooms } = useRoom();
+  const { rooms } = useRoom();
 
-  const currentRoom =
-    room || rooms.find((item) => String(item.id) === String(id));
+  const currentRoom = rooms.find(
+    (room) => String(room.id) === String(id)
+  );
 
   return (
     <div>
-      <RoomHeader />
+      <RoomHeader room={currentRoom} />
 
-      <h2>{currentRoom?.name || "Room"}</h2>
-      <p>Room ID: {id}</p>
-
-      <RoomMembers />
-      <RoomPresence />
-      <RoomChat />
-      <RoomMeeting />
+      <RoomMembers room={currentRoom} />
+      <RoomPresence room={currentRoom} />
+      <RoomChat room={currentRoom} />
+      <RoomMeeting room={currentRoom} />
     </div>
   );
 };

@@ -11,8 +11,8 @@ const Hero = () => {
         </h1>
 
         <p className="mt-4 max-w-xl text-xs leading-4 text-slate-600">
-          ____ is a virtual organized world that allows distributed teams to
-          meet, collaborate, and communicate seamlessly through interactive
+          DeskVerse is a virtual organized world that allows distributed teams
+          to meet, collaborate, and communicate seamlessly through interactive
           virtual offices, real-time video chats, and integrated productivity
           tools—all in one place.
         </p>

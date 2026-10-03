@@ -1,8 +1,10 @@
-const RoomMeeting = () => {
+const RoomMeeting = ({ room }) => {
   return (
     <section>
       <h2>Meeting</h2>
-      <p>Audio, video, and screen sharing will appear here.</p>
+      <p>Start or join a meeting in {room?.name || "this room"}.</p>
+
+      <button type="button">Join Meeting</button>
     </section>
   );
 };

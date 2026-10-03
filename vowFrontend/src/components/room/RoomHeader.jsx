@@ -1,7 +1,7 @@
-const RoomHeader = () => {
+const RoomHeader = ({ room }) => {
   return (
     <section>
-      <h1>Room</h1>
+      <h1>{room?.name || "Room"}</h1>
       <p>Collaborate with your team in this room.</p>
     </section>
   );

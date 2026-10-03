@@ -1,9 +1,10 @@
-import React from 'react'
-
 const Tasks = () => {
   return (
-    <div>Tasks</div>
-  )
-}
+    <div>
+      <h1>Tasks</h1>
+      <p>Your tasks will appear here.</p>
+    </div>
+  );
+};
 
-export default Tasks
+export default Tasks;

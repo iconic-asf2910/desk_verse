@@ -28,7 +28,7 @@ const Features = () => {
   return (
     <section className="bg-white px-14 pb-8">
       <h2 className="mb-6 text-xl font-normal text-black">
-        The ___ Experience
+        The DeskVerse Experience
       </h2>
 
       <div className="grid grid-cols-4 gap-12">

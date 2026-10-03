@@ -5,7 +5,7 @@ const HomeFooter = () => {
         <div className="grid grid-cols-6 gap-8">
           <div>
             <h2 className="text-2xl font-normal">
-            -------
+        DeskVerse
             </h2>
 
             <p className="mt-2 max-w-44 text-xs leading-5">
