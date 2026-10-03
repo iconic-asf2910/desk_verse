@@ -20,8 +20,7 @@ const Features = () => {
     },
     {
       title: "Project Tracker",
-      description:
-        "Integrated task management with role-based assignments.",
+      description: "Integrated task management with role-based assignments.",
       image: "/projector.png",
     },
   ];
@@ -36,7 +35,7 @@ const Features = () => {
         {features.map((feature) => (
           <div
             key={feature.title}
-            className="h-36 rounded-lg border border-slate-500 bg-gray-300 px-4 py-3"
+            className="h-36 rounded-lg border border-slate-500 bg-gray-200 px-4 py-3"
           >
             <div className="flex h-12 justify-center">
               <img

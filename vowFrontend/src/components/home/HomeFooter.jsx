@@ -68,7 +68,7 @@ const HomeFooter = () => {
             <div className="mt-2 flex">
               <input
                 type="email"
-                placeholder="Enter Your Email Address"
+                placeholder="Enter Your Email"
                 className="h-5 w-28 rounded-l bg-white px-2 text-xs text-gray-700 outline-none"
               />
 

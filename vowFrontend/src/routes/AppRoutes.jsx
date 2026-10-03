@@ -13,6 +13,11 @@ import RoomDetails from "../pages/room/RoomDetails";
 import MeetingDetails from "../pages/meetings/MeetingDetails";
 import CreateMeeting from "../pages/meetings/CreateMeeting";
 import Meetings from "../pages/meetings/Meetings";
+import Rooms from "../pages/room/Rooms";
+import Chat from "../pages/chat/Chat";
+import Tasks from "../pages/tasks/Tasks";
+import Polls from "../pages/polls/Polls";
+import Analytics from "../pages/analytics/Analytics";
 
 const AppRoutes = () => {
   return (
@@ -21,27 +26,23 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-     
-        <Route element={<MainLayout />}>
-          <Route path="/rooms/:id" element={<RoomDetails />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/meetings/create" element={<CreateMeeting />} />
-          <Route path="/meetings" element={<Meetings />} />
-          <Route path="/meetings/:id" element={<MeetingDetails />} />
-          
-          <Route path="/workspaces" element={<Workspaces />} />
-          <Route path="/workspaces/:id" element={<WorkspaceDetails />} />
+      <Route element={<MainLayout />}>
+        <Route path="/rooms/:id" element={<RoomDetails />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/meetings/create" element={<CreateMeeting />} />
+        <Route path="/meetings" element={<Meetings />} />
+        <Route path="/meetings/:id" element={<MeetingDetails />} />
 
-          {/* 
+        <Route path="/workspaces" element={<Workspaces />} />
+        <Route path="/workspaces/:id" element={<WorkspaceDetails />} />
+        <Route path="/rooms" element={<Rooms />} />
 
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/polls" element={<Polls />} />
-          <Route path="/analytics" element={<Analytics />} />
-          */}
-        </Route>
-      
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/polls" element={<Polls />} />
+        <Route path="/analytics" element={<Analytics />} />
+      </Route>
     </Routes>
   );
 };
