@@ -10,6 +10,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import Workspaces from "../pages/workspace/Workspaces";
 import WorkspaceDetails from "../pages/workspace/WorkspaceDetails";
 import RoomDetails from "../pages/room/RoomDetails";
+import MeetingDetails from "../pages/meetings/MeetingDetails";
+import CreateMeeting from "../pages/meetings/CreateMeeting";
+import Meetings from "../pages/meetings/Meetings";
 
 const AppRoutes = () => {
   return (
@@ -20,15 +23,18 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
-        <Route path="/rooms/:id" element={<RoomDetails />} />
+          <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-
+          <Route path="/meetings/create" element={<CreateMeeting />} />
+          <Route path="/meetings" element={<Meetings />} />
+          <Route path="/meetings/:id" element={<MeetingDetails />} />
+          
           <Route path="/workspaces" element={<Workspaces />} />
           <Route path="/workspaces/:id" element={<WorkspaceDetails />} />
 
           {/* 
-          <Route path="/meetings" element={<Meetings />} />
+
           <Route path="/chat" element={<Chat />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/polls" element={<Polls />} />
