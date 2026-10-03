@@ -9,6 +9,7 @@ import MainLayout from "../components/layout/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import Workspaces from "../pages/workspace/Workspaces";
 import WorkspaceDetails from "../pages/workspace/WorkspaceDetails";
+import RoomDetails from "../pages/room/RoomDetails";
 
 const AppRoutes = () => {
   return (
@@ -19,6 +20,7 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
+        <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
 

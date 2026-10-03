@@ -1,5 +1,7 @@
 import { useParams } from "react-router-dom";
 import useWorkspace from "../../hooks/UseWorkspace";
+import WorkspaceHeader from "../../components/workspace/WorkspaceHeader";
+import RoomList from "../../components/workspace/RoomList";
 
 const WorkspaceDetails = () => {
   const { id } = useParams();
@@ -7,8 +9,11 @@ const WorkspaceDetails = () => {
 
   return (
     <div>
-      <h1>{workspace?.name}</h1>
+      <WorkspaceHeader />
+
       <p>Workspace ID: {id}</p>
+
+      <RoomList />
     </div>
   );
 };
