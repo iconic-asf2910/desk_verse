@@ -38,6 +38,25 @@ const RoomProvider = ({ children }) => {
 
   const [room, setRoom] = useState(null);
 
+  const addRoom = (name) => {
+    const newRoom = {
+      id: Date.now(),
+      name: name.trim(),
+      people: [],
+    };
+
+    setRooms((previousRooms) => [
+      ...previousRooms,
+      newRoom,
+    ]);
+  };
+
+  const removeRoom = (roomId) => {
+    setRooms((previousRooms) =>
+      previousRooms.filter((room) => room.id !== roomId)
+    );
+  };
+
   return (
     <RoomContext.Provider
       value={{
@@ -45,6 +64,8 @@ const RoomProvider = ({ children }) => {
         setRooms,
         room,
         setRoom,
+        addRoom,
+        removeRoom,
       }}
     >
       {children}

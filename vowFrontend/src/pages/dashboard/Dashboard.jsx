@@ -1,48 +1,48 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useRoom from "../../hooks/UseRoom";
 
 const Dashboard = () => {
   const [workspace, setWorkspace] = useState("Acme Corp HQ");
-  const navigate = useNavigate();
+  const [showAddRoom, setShowAddRoom] = useState(false);
+  const [roomName, setRoomName] = useState("");
 
-  const rooms = [
-    {
-      id: 1,
-      name: "Design Studio",
-      position: "left-[3%] top-[18%] w-[34%] h-[38%]",
-      people: ["Sarah", "Mike"],
-    },
-    {
-      id: 2,
-      name: "Meeting Pod A",
-      position: "left-[38%] top-[10%] w-[25%] h-[36%]",
-      people: ["Alex"],
-    },
-    {
-      id: 3,
-      name: "Meeting Pod B",
-      position: "right-[3%] top-[10%] w-[28%] h-[38%]",
-      people: ["Emma"],
-    },
-    {
-      id: 4,
-      name: "The Lounge",
-      position: "left-[3%] bottom-[5%] w-[34%] h-[38%]",
-      people: ["Sophia"],
-    },
-    {
-      id: 5,
-      name: "Engineering Bay",
-      position: "left-[38%] bottom-[5%] w-[27%] h-[38%]",
-      people: ["David"],
-    },
-    {
-      id: 6,
-      name: "Quiet Room",
-      position: "right-[3%] bottom-[5%] w-[27%] h-[32%]",
-      people: ["Ryan"],
-    },
-  ];
+  const navigate = useNavigate();
+  const { rooms, addRoom, removeRoom } = useRoom();
+
+  const roomPositions = {
+    1: "left-[3%] top-[18%] w-[34%] h-[38%]",
+    2: "left-[38%] top-[10%] w-[25%] h-[36%]",
+    3: "right-[3%] top-[10%] w-[28%] h-[38%]",
+    4: "left-[3%] bottom-[5%] w-[34%] h-[38%]",
+    5: "left-[38%] bottom-[5%] w-[27%] h-[38%]",
+    6: "right-[3%] bottom-[5%] w-[27%] h-[32%]",
+  };
+
+  const handleAddRoom = (event) => {
+    event.preventDefault();
+
+    if (!roomName.trim()) {
+      return;
+    }
+
+    addRoom(roomName);
+
+    setRoomName("");
+    setShowAddRoom(false);
+  };
+
+  const handleRemoveRoom = (roomId) => {
+    const shouldRemove = window.confirm(
+      "Are you sure you want to remove this room?"
+    );
+
+    if (!shouldRemove) {
+      return;
+    }
+
+    removeRoom(roomId);
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-1">
@@ -76,8 +76,21 @@ const Dashboard = () => {
                 key={room.id}
                 type="button"
                 onClick={() => navigate(`/rooms/${room.id}`)}
-                className={`absolute ${room.position} flex flex-col items-center justify-center text-center`}
+                className={`absolute ${
+                  roomPositions[room.id] ||
+                  "left-[3%] top-[18%] w-[34%] h-[38%]"
+                } flex flex-col items-center justify-center text-center`}
               >
+                <span
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleRemoveRoom(room.id);
+                  }}
+                  className="absolute left-1 top-1 flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-red-400 text-[10px] font-medium leading-none text-red-500 hover:bg-red-50"
+                >
+                  ×
+                </span>
+
                 <span className="text-xs font-medium text-slate-800">
                   {room.name}
                 </span>
@@ -151,11 +164,52 @@ const Dashboard = () => {
       <div className="mt-1 flex justify-center">
         <button
           type="button"
+          onClick={() => setShowAddRoom(true)}
           className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium mr-68 text-white hover:bg-blue-700"
         >
           + Add Room
         </button>
       </div>
+
+      {showAddRoom && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Add Room
+            </h2>
+
+            <form onSubmit={handleAddRoom} className="mt-5">
+              <input
+                type="text"
+                value={roomName}
+                onChange={(event) => setRoomName(event.target.value)}
+                placeholder="Room name"
+                className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+              />
+
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddRoom(false);
+                    setRoomName("");
+                  }}
+                  className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Add Room
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
