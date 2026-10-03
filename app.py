@@ -137,7 +137,7 @@ with down_col3:
     if st.session_state.meeting_notes:
         st.download_button(
         label = 'Save AI Meeting Notes (.md)',
-        data = st.session_state.meeting_notes.md,
+        data = st.session_state.meeting_notes,
         file_name= 'ai_meeting_notes.md',
         mime = 'text/markdown'
         )
