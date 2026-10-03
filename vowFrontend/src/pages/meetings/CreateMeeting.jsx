@@ -1,29 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import useAuth from "../../hooks/UseAuth";
-import { createMeeting } from "../../services/api/meetingApi";
+import { getMeetings, saveMeetings } from "../../utils/meetingStorage";
 
 const CreateMeeting = () => {
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [participants, setParticipants] = useState([]);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
 
-    setLoading(true);
     setError("");
 
+    if (new Date(endTime) <= new Date(startTime)) {
+      setError("End time must be after start time.");
+      return;
+    }
+
     const meetingData = {
+      id: Date.now().toString(),
       title,
       description,
       startTime,
@@ -31,15 +31,11 @@ const CreateMeeting = () => {
       participants,
     };
 
-    try {
-      const data = await createMeeting(meetingData, token);
+    const existingMeetings = getMeetings();
 
-      navigate(`/meetings/${data.id}`);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    saveMeetings([...existingMeetings, meetingData]);
+
+    navigate(`/meetings/${meetingData.id}`);
   };
 
   return (
@@ -118,9 +114,7 @@ const CreateMeeting = () => {
           ))}
         </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Meeting"}
-        </button>
+        <button type="submit">Create Meeting</button>
       </form>
     </div>
   );

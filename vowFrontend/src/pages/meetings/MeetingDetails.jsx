@@ -1,49 +1,43 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import useAuth from "../../hooks/UseAuth";
-import { getMeeting } from "../../services/api/meetingApi";
+import { getMeetings } from "../../utils/meetingStorage";
 
 const MeetingDetails = () => {
   const { id } = useParams();
-  const { token } = useAuth();
 
   const [meeting, setMeeting] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadMeeting = async () => {
-      try {
-        const data = await getMeeting(id, token);
-        setMeeting(data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const meetings = getMeetings();
+    const selectedMeeting = meetings.find(
+      (item) => String(item.id) === String(id)
+    );
 
-    if (token && id) {
-      loadMeeting();
-    }
-  }, [id, token]);
+    setMeeting(selectedMeeting);
+  }, [id]);
 
-  if (loading) {
-    return <p>Loading meeting...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
+  if (!meeting) {
+    return <p>Meeting not found.</p>;
   }
 
   return (
     <div>
-      <h1>{meeting?.title || "Meeting"}</h1>
+      <h1>{meeting.title}</h1>
 
-      <p>{meeting?.description}</p>
+      <p>{meeting.description}</p>
 
-      <p>Meeting ID: {id}</p>
+      <p>Meeting ID: {meeting.id}</p>
+
+      <p>Start Time: {meeting.startTime}</p>
+
+      <p>End Time: {meeting.endTime}</p>
+
+      <p>
+        Participants:{" "}
+        {meeting.participants.length > 0
+          ? meeting.participants.join(", ")
+          : "No participants"}
+      </p>
 
       <button>Join Meeting</button>
     </div>

@@ -1,46 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useAuth from "../../hooks/UseAuth";
-import { getMeetings } from "../../services/api/meetingApi";
+import { getMeetings } from "../../utils/meetingStorage";
 
 const Meetings = () => {
-  const { token } = useAuth();
   const [meetings, setMeetings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadMeetings = async () => {
-      try {
-        const data = await getMeetings(token);
-        setMeetings(data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (token) {
-      loadMeetings();
-    }
-  }, [token]);
-
-  if (loading) {
-    return <p>Loading meetings...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
+    setMeetings(getMeetings());
+  }, []);
 
   return (
     <div>
       <h1>Meetings</h1>
 
-      <Link to="/meetings/create">
-        Create Meeting
-      </Link>
+      <Link to="/meetings/create">Create Meeting</Link>
 
       {meetings.length === 0 ? (
         <p>No meetings found.</p>
