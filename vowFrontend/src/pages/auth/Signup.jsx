@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import useAuth from "../../hooks/UseAuth";
 
 const Signup = () => {
-  const { signup } = useAuth();
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,60 +26,64 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="relative flex w-2/5 flex-col items-center justify-center overflow-hidden bg-slate-900 px-12 text-center text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-3"
-          style={{ backgroundImage: "url('/bgimg.jpg')" }}
-        />
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 bg-cover bg-center"
+      style={{ backgroundImage: "url('/bgimg.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-slate-950/92" />
 
-        <div className="relative z-10">
-          <h1 className="text-5xl font-bold tracking-tight">
+      <div className="relative z-10 flex w-full max-w-6xl items-center justify-center gap-80 px-8">
+        <div className="flex w-[32%] flex-col items-center text-center text-white">
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border-2 border-white">
+            <div className="h-7 w-7 rounded-full border border-white" />
+          </div>
+
+          <h1 className="text-5xl font-semibold tracking-tight">
             DeskVerse
           </h1>
 
-          <p className="mt-3 text-sm text-slate-200">
+          <p className="mt-3 text-base leading-6 text-white">
             Securely access your
             <br />
             virtual workspaces.
           </p>
         </div>
-      </div>
 
-      <div className="flex w-3/5 items-center justify-center px-12">
-        <div className="w-full max-w-md">
-          <p className="text-sm text-gray-700">Get Started</p>
+        <div className="w-[2000px] rounded-lg bg-white px-14 py-12 shadow-lg">
+          <div className="mb-5">
+            <p className="text-base text-slate-600">Get Started</p>
 
-          <h2 className="mt-1 text-3xl font-bold text-gray-900">
-            Create Your Account
-          </h2>
+            <h2 className="mt-1 text-4xl font-bold text-black">
+              Create Your Account
+            </h2>
+          </div>
 
-          <div className="mt-7 space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-xs text-slate-700"
             >
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   fill="#4285F4"
-                  d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h6.45a5.52 5.52 0 0 1-2.39 3.62v3.01h3.87c2.27-2.09 3.56-5.17 3.56-8.66Z"
+                  d="M21.35 12.27c0-.68-.06-1.34-.17-1.97H12v3.73h5.22a4.47 4.47 0 0 1-1.94 2.93v2.44h3.14c1.84-1.69 2.93-4.18 2.93-7.13Z"
                 />
                 <path
                   fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.07 7.93-2.91l-3.87-3.01c-1.07.72-2.43 1.15-4.06 1.15-3.12 0-5.76-2.11-6.71-4.95H1.29v3.1A12 12 0 0 0 12 24Z"
+                  d="M12 21.9c2.63 0 4.84-.87 6.45-2.36l-3.14-2.44c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.3v2.52A9.75 9.75 0 0 0 12 21.9Z"
                 />
                 <path
                   fill="#FBBC05"
-                  d="M5.29 14.28A7.2 7.2 0 0 1 4.92 12c0-.79.14-1.56.37-2.28v-3.1H1.29A12 12 0 0 0 0 12c0 1.93.46 3.75 1.29 5.38l4-3.1Z"
+                  d="M6.54 14a5.87 5.87 0 0 1 0-3.73V7.75H3.3a9.75 9.75 0 0 0 0 8.77L6.54 14Z"
                 />
                 <path
                   fill="#EA4335"
-                  d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.95 1.14 15.24 0 12 0A12 12 0 0 0 1.29 6.62l4 3.1C6.24 6.88 8.88 4.77 12 4.77Z"
+                  d="M12 6.24c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.83 3.32 14.63 2.1 12 2.1a9.75 9.75 0 0 0-8.7 5.65l3.24 2.52C7.31 7.96 9.46 6.24 12 6.24Z"
                 />
               </svg>
 
@@ -88,98 +92,107 @@ const Signup = () => {
 
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-300 text-xs text-slate-700"
             >
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.09 1.83 1.23 1.83 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.18 0 0 1-.32 3.3 1.23A11.5 11.5 0 0 1 12 6.11c1.02 0 2.05.14 3.01.41 2.29-1.55 3.29-1.23 3.29-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.6-2.8 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z" />
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.85 10.91.57.1.78-.25.78-.55v-2.13c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.26-1.28-5.26-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18A11.06 11.06 0 0 1 12 6.08c.98 0 1.97.13 2.89.38 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.69.42.36.78 1.07.78 2.16v3.21c0 .31.21.66.79.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
               </svg>
 
               Continue with GitHub
             </button>
           </div>
 
-          <div className="my-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-gray-300" />
-            <span className="text-sm text-gray-500">OR</span>
-            <div className="h-px flex-1 bg-gray-300" />
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-300" />
+
+            <span className="text-xs text-slate-500">OR</span>
+
+            <div className="h-px flex-1 bg-slate-300" />
           </div>
 
           <form onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-gray-800">
-              Full Name
-            </label>
+            <div className="mb-4">
+              <label className="mb-1 block text-sm text-slate-700">
+                Full Name
+              </label>
 
-            <input
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Full Name"
-              required
-              className="mt-2 w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
-            />
-
-            <label className="mt-4 block text-sm font-medium text-gray-800">
-              Work Email address
-            </label>
-
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="Work Email address"
-              required
-              className="mt-2 w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
-            />
-
-            <label className="mt-4 block text-sm font-medium text-gray-800">
-              Password
-            </label>
-
-            <div className="relative mt-2">
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Full Name"
                 required
-                minLength={8}
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).*"
-                className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 text-sm outline-none focus:border-blue-500"
+                className="h-9 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 text-xs outline-none focus:border-blue-500"
               />
+            </div>
 
-              <button
-                type="button"
-                onClick={() => setShowPassword((previous) => !previous)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div className="mb-4">
+              <label className="mb-1 block text-sm text-slate-700">
+                Work Email Address
+              </label>
+
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="abc@deskverse.com"
+                required
+                className="h-9 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 text-xs outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-slate-700">
+                Password
+              </label>
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="****************"
+                  required
+                  className="h-9 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 pr-10 text-xs outline-none focus:border-blue-500"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                >
+                  {showPassword ? (
+                    <EyeOff size={17} />
+                  ) : (
+                    <Eye size={17} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <p className="mt-4 text-sm text-red-600">{error}</p>
+              <p className="mt-3 text-xs text-red-500">
+                {error}
+              </p>
             )}
 
             <button
               type="submit"
-              className="mt-5 w-full rounded-md bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-7 h-10 w-full rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700"
             >
               Create Account
             </button>
           </form>
 
-          <p className="mt-5 text-center text-sm text-gray-600">
+          <p className="mt-7 text-center text-xs text-slate-600">
             Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:underline"
-            >
+            <Link to="/login" className="text-[#15155c]">
               Log in
             </Link>
           </p>

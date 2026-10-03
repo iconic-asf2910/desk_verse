@@ -1,35 +1,42 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 
 const Sidebar = () => {
   const links = [
-   { name: "Dashboard", path: "/dashboard" },
-    { name: "Workspaces", path: "/workspaces" },
-    { name: "Rooms", path: "/rooms" },
-    { name: "Meetings", path: "/meetings" },
-    { name: "Chat", path: "/chat" },
-    { name: "Tasks", path: "/tasks" },
-    { name: "Polls", path: "/polls" },
-    { name: "Analytics", path: "/analytics" },
-    { name: "Profile", path: "/profile" },
+    { name: "Dashboard", path: "/dashboard", icon: "/dashboard.png" },
+    { name: "Rooms", path: "/rooms", icon: "/rooms.png" },
+    { name: "Meetings", path: "/meetings", icon: "/meetings.png" },
+    { name: "Chat", path: "/chat", icon: "/chat.png" },
+    { name: "Tasks", path: "/tasks", icon: "/tasks.png" },
+    { name: "Polls", path: "/polls", icon: "/polls.png" },
+    { name: "Analytics", path: "/analytics", icon: "/analytics.png" },
+    { name: "Profile", path: "/profile", icon: "/profile.png" },
   ];
 
   return (
-    <div className="flex flex-col gap-2 p-4">
-      {links.map((link) => (
-        <NavLink
-          key={link.path}
-          to={link.path}
-          className={({ isActive }) =>
-            `w-fit p-2 rounded ${
-              isActive ? "bg-green-500 text-white" : "text-gray-600"
-            }`
-          }
-        >
-          {link.name}
-        </NavLink>
-      ))}
-    </div>
+    <aside className="min-h-[calc(100vh-4rem)] w-60 bg-[#111827] px-4 py-6">
+      <nav className="space-y-2">
+        {links.map((link) => (
+          <NavLink
+            key={link.path}
+            to={link.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-lg px-3 py-2.5 ${
+                isActive
+                  ? "bg-white/10 text-white"
+                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+              }`
+            }
+          >
+            <img
+              src={link.icon}
+              alt=""
+              className="h-9 w-9 object-contain"
+            />
+            <span className="text-sm">{link.name}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </aside>
   );
 };
 

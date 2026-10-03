@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import useAuth from "../../hooks/UseAuth";
 
 const Login = () => {
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,97 +25,96 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="relative flex w-2/5 flex-col items-center justify-center overflow-hidden bg-slate-900 px-12 text-center text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-3"
-          style={{ backgroundImage: "url('/bgimg.jpg')" }}
-        />
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 bg-cover bg-center"
+      style={{ backgroundImage: "url('/bgimg.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-slate-950/92" />
 
-        <div className="relative z-10">
-          <h1 className="text-5xl font-bold tracking-tight">
-            DeskVerse
-          </h1>
+      <div className="relative z-10 flex w-full max-w-6xl items-center justify-center gap-80 px-8">
+        <div className="flex w-[32%] flex-col items-center text-center text-white">
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border-2 border-white">
+            <div className="h-7 w-7 rounded-full border border-white" />
+          </div>
 
-          <p className="mt-3 text-sm text-slate-200">
+          <h1 className="text-5xl font-semibold tracking-tight">DeskVerse</h1>
+
+          <p className="mt-3 text-base leading-6 text-white">
             Securely access your
             <br />
             virtual workspaces.
           </p>
         </div>
-      </div>
 
-      <div className="flex w-3/5 items-center justify-center px-12">
-        <div className="w-full max-w-md">
-          <p className="text-sm text-gray-700">Welcome back,</p>
+        <div className="w-[2000px] rounded-lg bg-white px-14 py-16 shadow-lg">
+          <div className="mb-7">
+            <p className="text-base text-slate-600">Welcome back,</p>
 
-          <h2 className="mt-1 text-3xl font-bold text-gray-900">
-            Log In to Your Account
-          </h2>
+            <h2 className="mt-2 text-4xl font-bold text-black">
+              Log In to Your Account
+            </h2>
+          </div>
 
-          <form onSubmit={handleSubmit} className="mt-8">
-            <label className="block text-sm font-medium text-gray-800">
-              Work Email address
-            </label>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-5">
+              <label className="mb-2 block text-base text-slate-700">
+                Work Email Address
+              </label>
 
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="alex@deskverse.com"
-              required
-              className="mt-2 w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
-            />
-
-            <label className="mt-5 block text-sm font-medium text-gray-800">
-              Password
-            </label>
-
-            <div className="relative mt-2">
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="abc@deskverse.com"
                 required
-                className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 text-sm outline-none focus:border-blue-500"
+                className="h-11 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 text-sm text-slate-700 outline-none focus:border-blue-500"
               />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword((previous) => !previous)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
 
-            <div className="mt-2 text-right">
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Forgot password?
-              </button>
+            <div>
+              <label className="mb-2 block text-base text-slate-700">
+                Password
+              </label>
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="****************"
+                  required
+                  className="h-11 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 pr-11 text-sm text-slate-700 outline-none focus:border-blue-500"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              <div className="mt-2 text-right">
+                <button type="button" className="text-xs text-[#15155c]">
+                  Forgot Password?
+                </button>
+              </div>
             </div>
 
-            {error && (
-              <p className="mt-4 text-sm text-red-600">{error}</p>
-            )}
+            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
             <button
               type="submit"
-              className="mt-5 w-full rounded-md bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-12 h-10 w-full rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700"
             >
               Log In
             </button>
           </form>
 
-          <p className="mt-5 text-center text-sm text-gray-600">
+          <p className="mt-8 text-center text-sm text-slate-600">
             Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="font-medium text-blue-600 hover:underline"
-            >
+            <Link to="/signup" className="text-[#15155c]">
               Sign up
             </Link>
           </p>

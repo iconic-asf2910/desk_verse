@@ -1,28 +1,59 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Bell, Menu } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import useAuth from "../../hooks/UseAuth";
 
 const Navbar = () => {
-  const { logout } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const isProfile = location.pathname === "/profile";
 
   return (
-    <div>
-      <Link to="/">logo</Link>
+    <header className="flex h-16 bg-[#f3f4f6]">
+      <Link
+        to="/dashboard"
+        className="flex w-60 items-center bg-[#111827] px-6 text-2xl font-semibold tracking-tight text-white"
+      >
+        DeskVerse
+      </Link>
 
-      <div>
-        <Link to="/workspaces">Workspace</Link>
+      <div className="flex flex-1 items-center justify-end border-b border-slate-300 px-6">
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-200"
+        >
+          <Bell size={20} strokeWidth={1.8} />
+        </button>
+
+        <div className="mx-4 h-5 w-px bg-white/40" />
+
+        <Link
+          to="/profile"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
+            isProfile ? "bg-slate-200" : "hover:bg-slate-200"
+          }`}
+        >
+          <img
+            src="/manprofile.png"
+            alt="Profile"
+            className="h-9 w-9 rounded-full object-cover"
+          />
+
+          <p className="text-sm font-medium text-slate-900">
+            {user?.name || "User"}
+          </p>
+        </Link>
+
+        <div className="mx-4 h-5 w-px bg-white/40" />
+
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-200"
+        >
+          <Menu size={21} strokeWidth={1.8} />
+        </button>
       </div>
-
-      <div>
-        <button>Notifications</button>
-      </div>
-
-      <div>
-        <Link to="/profile">Profile</Link>
-
-        <button onClick={logout}>Logout</button>
-      </div>
-    </div>
+    </header>
   );
 };
 
