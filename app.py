@@ -29,8 +29,8 @@ with layout_col1:
     st.write('Click below to start recording.')
 
     audio_data = mic_recorder(
-        start_prompt= 'Start Recording'
-        stop_prompt= 'Stop and Process'
+        start_prompt= 'Start Recording',
+        stop_prompt= 'Stop and Process',
         key= 'recorder'
     )
 
@@ -39,7 +39,7 @@ with layout_col1:
 
         st.success['Audio Captured successfully!']
 
-        st.audio
+        st.audio(st.session_state.audio_bytes, format= 'audio/wav')
 
     if st.session_state.audio_bytes and st.button('✨ Generate AI Transcript & Notes'):
         with st.spinner('Processing audio track with whisper AI...'):
@@ -74,7 +74,22 @@ with layout_col1:
                                 )
 
                             },
-                            {'role': }
+                            {'role': 'user', 'content': st.session_state.transcript}
                         ]
                     )
+                    st.session_state.meeting_notes = gpt_response.choices[0].message.content
+
+            except Exception as e:
+                st.error(f'An API error occured: {e}')
+
+            finally:
+                if os.path.exists(temp_filename):
+                    os.remove(temp_filename)
+
+with layout_col2:
+
+    st.header('2. Live Transcripts and AI Insights')
+
+    tab1, tab2 =     
+            
         
