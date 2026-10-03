@@ -1,18 +1,17 @@
-import React from "react";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 
-const MainLayout = ({ children }) => {
+const MainLayout = () => {
   return (
-    <div>
+    <div className="min-h-screen bg-[#f3f4f6]">
       <Navbar />
 
-      <div>
+      <div className="flex">
         <Sidebar />
 
-        <main>
-        <Outlet />
+        <main className="min-w-0 flex-1">
+          <Outlet />
         </main>
       </div>
     </div>
