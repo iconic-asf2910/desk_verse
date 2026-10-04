@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MoreHorizontal, Search } from "lucide-react";
-import { getMeetings } from "../../utils/meetingStorage";
+import {
+  getMeetings,
+  deleteMeeting,
+} from "../../utils/meetingStorage";
 
 const Meetings = () => {
   const [meetings, setMeetings] = useState([]);
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
 
   const navigate = useNavigate();
 
@@ -23,12 +27,29 @@ const Meetings = () => {
     "/boy6.png",
   ];
 
+  const handleDeleteMeeting = (meetingId) => {
+    const shouldDelete = window.confirm(
+      "Are you sure you want to remove this meeting?"
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    const updatedMeetings = deleteMeeting(meetingId);
+
+    setMeetings(updatedMeetings);
+    setOpenMenu(null);
+  };
+
   const filteredMeetings = meetings.filter((meeting) => {
     const searchText = search.toLowerCase();
 
     return (
-      meeting.title.toLowerCase().includes(searchText) ||
-      (meeting.description || "").toLowerCase().includes(searchText)
+      (meeting.title || "").toLowerCase().includes(searchText) ||
+      (meeting.description || "")
+        .toLowerCase()
+        .includes(searchText)
     );
   });
 
@@ -136,7 +157,7 @@ const Meetings = () => {
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-4">
+                <div className="relative flex shrink-0 items-center gap-4">
                   <button
                     type="button"
                     onClick={() =>
@@ -153,10 +174,39 @@ const Meetings = () => {
 
                   <button
                     type="button"
+                    onClick={() =>
+                      setOpenMenu(
+                        openMenu === meeting.id
+                          ? null
+                          : meeting.id
+                      )
+                    }
                     className="flex h-8 w-8 items-center justify-center rounded-full text-slate-800 hover:bg-slate-100"
                   >
                     <MoreHorizontal size={22} />
                   </button>
+
+                  {openMenu === meeting.id && (
+                    <div className="absolute right-0 top-10 z-10 w-36 rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+                      <Link
+                        to={`/meetings/${meeting.id}`}
+                        onClick={() => setOpenMenu(null)}
+                        className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        View Details
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteMeeting(meeting.id)
+                        }
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

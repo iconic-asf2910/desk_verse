@@ -57,7 +57,7 @@ const RoomDetails = () => {
     );
   }
 
-  const members = currentRoom.members || currentRoom.people || [];
+  const members = currentRoom.members || [];
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-5">
@@ -76,12 +76,14 @@ const RoomDetails = () => {
           </h1>
 
           <p className="mt-1 text-sm text-slate-500">
-            Collaborate with your team in this room.
+            {currentRoom.description ||
+              "Collaborate with your team in this room."}
           </p>
         </div>
 
         <button
           type="button"
+          onClick={() => navigate("/meetings")}
           className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
           Join Meeting
@@ -100,9 +102,9 @@ const RoomDetails = () => {
                 No members in this room.
               </p>
             ) : (
-              members.map((person) => (
+              members.map((person, index) => (
                 <div
-                  key={person}
+                  key={`${person}-${index}`}
                   className="flex items-center gap-3"
                 >
                   <img

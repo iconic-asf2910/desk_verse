@@ -39,6 +39,8 @@ const JoinMeeting = () => {
     );
   }
 
+  const participants = meeting.participants || [];
+
   if (isJoined) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#111827] px-5">
@@ -117,12 +119,12 @@ const JoinMeeting = () => {
             </h2>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              {meeting.participants.length === 0 ? (
+              {participants.length === 0 ? (
                 <p className="text-sm text-slate-500">
                   No participants added.
                 </p>
               ) : (
-                meeting.participants.map((participant, index) => (
+                participants.map((participant, index) => (
                   <div
                     key={`${participant}-${index}`}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2"

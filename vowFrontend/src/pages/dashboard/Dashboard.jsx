@@ -60,10 +60,19 @@ const Dashboard = () => {
     loadWorkspaces();
   }, [setWorkspaceId]);
 
+  const handleWorkspaceChange = (event) => {
+    const workspaceId = event.target.value;
+
+    setWorkspace(workspaceId);
+    setWorkspaceId(workspaceId);
+  };
+
   const handleAddRoom = async (event) => {
     event.preventDefault();
 
-    if (!roomName.trim()) return;
+    if (!roomName.trim()) {
+      return;
+    }
 
     await addRoom(roomName);
 
@@ -76,7 +85,9 @@ const Dashboard = () => {
       "Are you sure you want to remove this room?"
     );
 
-    if (!shouldRemove) return;
+    if (!shouldRemove) {
+      return;
+    }
 
     await removeRoom(roomId);
   };
@@ -104,17 +115,20 @@ const Dashboard = () => {
 
         <select
           value={workspace}
-          onChange={(event) => {
-            setWorkspace(event.target.value);
-            setWorkspaceId(event.target.value);
-          }}
+          onChange={handleWorkspaceChange}
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none"
         >
-          {workspaces.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
+          {workspaces.length === 0 ? (
+            <option value="">
+              No workspaces
             </option>
-          ))}
+          ) : (
+            workspaces.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))
+          )}
         </select>
       </div>
 
@@ -184,44 +198,59 @@ const Dashboard = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg border border-emerald-200 bg-emerald-100 p-5">
-            <h2 className="mb-4 text-base font-medium text-slate-800">
-              Workspace Analytics
+          <div className="rounded-lg border border-slate-300 bg-white p-5">
+            <h2 className="text-base font-medium text-slate-800">
+              Workspace Overview
             </h2>
 
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 text-sm font-medium text-emerald-700">
-                96%
-              </div>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Manage your workspace rooms from the floor plan.
+              Select a room to open its details or create a new room.
+            </p>
 
-              <div className="space-y-2 text-xs text-slate-600">
-                <p>Attendance: 96%</p>
-                <p>Engagement: High</p>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/analytics")}
+              className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              View Analytics →
+            </button>
           </div>
 
           <div className="rounded-lg border border-slate-300 bg-white p-5">
-            <h2 className="mb-3 text-base font-medium text-slate-800">
-              Pending Tasks
+            <h2 className="text-base font-medium text-slate-800">
+              Rooms
             </h2>
 
-            <ol className="list-decimal space-y-2 pl-5 text-sm leading-5 text-slate-600">
-              <li>Review Design Specs</li>
-              <li>Complete Onboarding Call</li>
-              <li>Q4 Planning Prep</li>
-            </ol>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {rooms.length}
+            </p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Rooms in the selected workspace
+            </p>
           </div>
 
           <div className="rounded-lg border border-slate-300 bg-white p-5">
-            <h2 className="mb-3 text-base font-medium text-slate-800">
-              AI Meeting Summaries
+            <h2 className="text-base font-medium text-slate-800">
+              Quick Actions
             </h2>
 
-            <ol className="list-decimal space-y-2 pl-5 text-sm leading-5 text-slate-600">
-              <li>Q3 Sync Notes</li>
-              <li>Feature Brainstorm</li>
-            </ol>
+            <button
+              type="button"
+              onClick={() => navigate("/meetings")}
+              className="mt-4 w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              View Meetings
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/tasks")}
+              className="mt-2 w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              View Tasks
+            </button>
           </div>
         </div>
       </div>

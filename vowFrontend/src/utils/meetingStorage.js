@@ -6,4 +6,20 @@ const saveMeetings = (meetings) => {
   localStorage.setItem("meetings", JSON.stringify(meetings));
 };
 
-export { getMeetings, saveMeetings };
+const deleteMeeting = (meetingId) => {
+  const meetings = getMeetings();
+
+  const updatedMeetings = meetings.filter(
+    (meeting) => String(meeting.id) !== String(meetingId)
+  );
+
+  saveMeetings(updatedMeetings);
+
+  return updatedMeetings;
+};
+
+export {
+  getMeetings,
+  saveMeetings,
+  deleteMeeting,
+};

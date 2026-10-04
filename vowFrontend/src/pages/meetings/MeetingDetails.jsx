@@ -44,6 +44,7 @@ const MeetingDetails = () => {
 
   const startDate = new Date(meeting.startTime);
   const endDate = new Date(meeting.endTime);
+  const participants = meeting.participants || [];
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f5f6f8] px-5 py-5">
@@ -109,12 +110,12 @@ const MeetingDetails = () => {
           </h2>
 
           <div className="mt-4 flex flex-wrap gap-3">
-            {meeting.participants.length === 0 ? (
+            {participants.length === 0 ? (
               <p className="text-sm text-slate-500">
                 No participants added.
               </p>
             ) : (
-              meeting.participants.map((participant, index) => (
+              participants.map((participant, index) => (
                 <div
                   key={`${participant}-${index}`}
                   className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
