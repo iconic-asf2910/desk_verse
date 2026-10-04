@@ -436,7 +436,6 @@ func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
 		update["endTime"] = req.EndTime
 	}
 	if req.StartTime.IsZero() && req.EndTime.IsZero() {
-		// No time update
 	} else if !req.StartTime.IsZero() && !req.EndTime.IsZero() {
 		if req.EndTime.Before(req.StartTime) {
 			http.Error(w, "endTime must be after startTime", http.StatusBadRequest)

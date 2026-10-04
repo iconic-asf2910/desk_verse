@@ -11,12 +11,37 @@ import (
 	"github.com/iconic-asf2910/vow/internal/meeting"
 	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/room"
+	"github.com/iconic-asf2910/vow/internal/signaling"
+	"github.com/iconic-asf2910/vow/internal/transcript"
 	"github.com/iconic-asf2910/vow/internal/workspace"
 	"github.com/joho/godotenv"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "VOW backend is running")
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		allowedOrigins := map[string]bool{
+			"http://localhost:5173": true,
+			"http://localhost:3000": true,
+			"http://127.0.0.1:3000": true,
+		}
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {
@@ -29,12 +54,13 @@ func main() {
 		log.Fatalf("MongoDB connection error: %v", err)
 	}
 
+	hub := signaling.NewHub()
+
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/api/auth/signup", auth.Signup)
 	http.HandleFunc("/api/auth/login", auth.Login)
 	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
 	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
-		// /api/workspaces/{id} or /api/workspaces/{id}/rooms
 		path := r.URL.Path
 		if strings.Contains(path, "/rooms") {
 			room.HandleRooms(w, r)
@@ -44,11 +70,20 @@ func main() {
 	}))
 	http.HandleFunc("/api/rooms/", middleware.RequireAuth(room.HandleRoomByID))
 	http.HandleFunc("/api/meetings", middleware.RequireAuth(meeting.HandleMeetings))
-	http.HandleFunc("/api/meetings/", middleware.RequireAuth(meeting.HandleMeetingByID))
+	http.HandleFunc("/api/meetings/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if strings.Contains(path, "/ws") {
+			signaling.HandleWS(hub, w, r)
+		} else if strings.Contains(path, "/transcript") {
+			middleware.RequireAuth(transcript.HandleTranscript)(w, r)
+		} else {
+			middleware.RequireAuth(meeting.HandleMeetingByID)(w, r)
+		}
+	})
 
 	fmt.Println("VOW backend running on :8080")
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", corsMiddleware(http.DefaultServeMux))
 	if err != nil {
 		fmt.Println("Server error:", err)
 	}

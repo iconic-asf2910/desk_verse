@@ -94,7 +94,6 @@ func isUserInWorkspace(userID string, workspaceID string) bool {
 
 	objID, err := bson.ObjectIDFromHex(workspaceID)
 	if err != nil {
-		// Try to find by workspaceId string if ID isn't an ObjectID
 		var ws models.Workspace
 		err = col.FindOne(ctx, bson.M{"_id": workspaceID}).Decode(&ws)
 		if err != nil {

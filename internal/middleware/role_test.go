@@ -95,7 +95,6 @@ func TestRequireRole(t *testing.T) {
 }
 
 func TestFullAuthAndRoleChaining(t *testing.T) {
-	// Protected route for managers only
 	protectedHandler := middleware.RequireAuth(middleware.RequireRole(models.RoleManager)(dummyHandler))
 
 	tests := []struct {

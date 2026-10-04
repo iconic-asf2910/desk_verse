@@ -88,7 +88,6 @@ func TestRoomJWT(t *testing.T) {
 		t.Errorf("expected 200 without middleware, got %d", rr.Code)
 	}
 
-	// Missing JWT via middleware
 	req2 := httptest.NewRequest(http.MethodPost, "/api/workspaces/ws1/rooms", bytes.NewReader([]byte(`{"name":"R"}`)))
 	req2.Header.Set("Content-Type", "application/json")
 	rr2 := httptest.NewRecorder()
@@ -99,7 +98,6 @@ func TestRoomJWT(t *testing.T) {
 		t.Errorf("missing JWT expected 401, got %d", rr2.Code)
 	}
 
-	// Invalid JWT
 	req3 := httptest.NewRequest(http.MethodPost, "/api/workspaces/ws1/rooms", bytes.NewReader([]byte(`{"name":"R"}`)))
 	req3.Header.Set("Content-Type", "application/json")
 	req3.Header.Set("Authorization", "Bearer badtoken")
@@ -111,7 +109,6 @@ func TestRoomJWT(t *testing.T) {
 		t.Errorf("invalid JWT expected 401, got %d", rr3.Code)
 	}
 
-	// Valid JWT
 	req4 := httptest.NewRequest(http.MethodPost, "/api/workspaces/ws1/rooms", bytes.NewReader([]byte(`{"name":"R"}`)))
 	req4.Header.Set("Content-Type", "application/json")
 	req4.Header.Set("Authorization", "Bearer "+generateRoomToken("u1", models.RoleTeamMember))
@@ -128,7 +125,6 @@ func TestCreateRoom(t *testing.T) {
 	cleanup := setupRoomDB(t)
 	defer cleanup(t)
 
-	// Setup workspace with user member
 	ws := models.Workspace{
 		ID:      bson.NewObjectID(),
 		Name:    "WS",
@@ -138,11 +134,11 @@ func TestCreateRoom(t *testing.T) {
 	db.DB.Collection("workspaces").InsertOne(context.Background(), ws)
 
 	tests := []struct {
-		name       string
-		auth       string
-		path       string
-		body       string
-		expStatus  int
+		name      string
+		auth      string
+		path      string
+		body      string
+		expStatus int
 	}{
 		{"missing JWT", "", fmt.Sprintf("/api/workspaces/%s/rooms", ws.ID.Hex()), `{"name":"R"}`, http.StatusUnauthorized},
 		{"invalid JWT", "Bearer bad", fmt.Sprintf("/api/workspaces/%s/rooms", ws.ID.Hex()), `{"name":"R"}`, http.StatusUnauthorized},
@@ -296,7 +292,6 @@ func TestUpdateRoom(t *testing.T) {
 		})
 	}
 
-	// Verify description preserved when omitted
 	req3 := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/rooms/%s", rm.ID.Hex()), bytes.NewReader([]byte(`{"name":"Updated Only"}`)))
 	req3.Header.Set("Content-Type", "application/json")
 	req3.Header.Set("Authorization", "Bearer "+generateRoomToken("u1", models.RoleTeamMember))
