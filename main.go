@@ -7,6 +7,8 @@ import (
 
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
+	"github.com/iconic-asf2910/vow/internal/middleware"
+	"github.com/iconic-asf2910/vow/internal/workspace"
 	"github.com/joho/godotenv"
 )
 
@@ -27,6 +29,8 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/api/auth/signup", auth.Signup)
 	http.HandleFunc("/api/auth/login", auth.Login)
+	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
+	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(workspace.HandleWorkspaceByID))
 
 	fmt.Println("VOW backend running on :8080")
 
