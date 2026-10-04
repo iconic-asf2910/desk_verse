@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useRoom from "../../hooks/UseRoom";
+import { getWorkspaces } from "../../services/api/workspaceApi";
 
 const Dashboard = () => {
-  const [workspace, setWorkspace] = useState("Acme Corp HQ");
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspace, setWorkspace] = useState("");
+  const [workspaceError, setWorkspaceError] = useState("");
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
 
@@ -28,15 +31,32 @@ const Dashboard = () => {
     6: "/boy6.png",
   };
 
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        setWorkspaceError("");
+
+        const data = await getWorkspaces();
+
+        setWorkspaces(data);
+
+        if (data.length > 0) {
+          setWorkspace(data[0].id);
+        }
+      } catch (error) {
+        setWorkspaceError(error.message);
+      }
+    };
+
+    loadWorkspaces();
+  }, []);
+
   const handleAddRoom = (event) => {
     event.preventDefault();
 
-    if (!roomName.trim()) {
-      return;
-    }
+    if (!roomName.trim()) return;
 
     addRoom(roomName);
-
     setRoomName("");
     setShowAddRoom(false);
   };
@@ -46,9 +66,7 @@ const Dashboard = () => {
       "Are you sure you want to remove this room?"
     );
 
-    if (!shouldRemove) {
-      return;
-    }
+    if (!shouldRemove) return;
 
     removeRoom(roomId);
   };
@@ -56,18 +74,28 @@ const Dashboard = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-1">
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Workspace Manager
-        </h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Workspace Manager
+          </h1>
+
+          {workspaceError && (
+            <p className="mt-1 text-sm text-red-500">
+              {workspaceError}
+            </p>
+          )}
+        </div>
 
         <select
           value={workspace}
           onChange={(event) => setWorkspace(event.target.value)}
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none"
         >
-          <option>Acme Corp HQ</option>
-          <option>Delhi Office</option>
-          <option>Mumbai Office</option>
+          {workspaces.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -111,7 +139,10 @@ const Dashboard = () => {
                       className="flex flex-col items-center"
                     >
                       <img
-                        src={roomCharacters[room.id] || "/manprofile.png"}
+                        src={
+                          roomCharacters[room.id] ||
+                          "/manprofile.png"
+                        }
                         alt={person}
                         className="h-8 w-8 rounded-full object-cover"
                       />

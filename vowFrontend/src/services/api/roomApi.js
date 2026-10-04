@@ -1,37 +1,37 @@
+import apiRequest from "../api";
+
 const getRooms = async (workspaceId) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/workspaces/${workspaceId}/rooms`
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch rooms");
-  }
-
-  return data;
+  return await apiRequest(`/api/workspaces/${workspaceId}/rooms`);
 };
 
-const createRoom = async (workspaceId, roomData, token) => {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/workspaces/${workspaceId}/rooms`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(roomData),
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to create room");
-  }
-
-  return data;
+const getRoom = async (roomId) => {
+  return await apiRequest(`/api/rooms/${roomId}`);
 };
 
-export { getRooms, createRoom };
+const createRoom = async (workspaceId, roomData) => {
+  return await apiRequest(`/api/workspaces/${workspaceId}/rooms`, {
+    method: "POST",
+    body: JSON.stringify(roomData),
+  });
+};
+
+const updateRoom = async (roomId, roomData) => {
+  return await apiRequest(`/api/rooms/${roomId}`, {
+    method: "PUT",
+    body: JSON.stringify(roomData),
+  });
+};
+
+const deleteRoom = async (roomId) => {
+  return await apiRequest(`/api/rooms/${roomId}`, {
+    method: "DELETE",
+  });
+};
+
+export {
+  getRooms,
+  getRoom,
+  createRoom,
+  updateRoom,
+  deleteRoom,
+};
