@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
 	"github.com/iconic-asf2910/vow/internal/middleware"
+	"github.com/iconic-asf2910/vow/internal/room"
 	"github.com/iconic-asf2910/vow/internal/workspace"
 	"github.com/joho/godotenv"
 )
@@ -30,7 +32,16 @@ func main() {
 	http.HandleFunc("/api/auth/signup", auth.Signup)
 	http.HandleFunc("/api/auth/login", auth.Login)
 	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
-	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(workspace.HandleWorkspaceByID))
+	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		// /api/workspaces/{id} or /api/workspaces/{id}/rooms
+		path := r.URL.Path
+		if strings.Contains(path, "/rooms") {
+			room.HandleRooms(w, r)
+		} else {
+			workspace.HandleWorkspaceByID(w, r)
+		}
+	}))
+	http.HandleFunc("/api/rooms/", middleware.RequireAuth(room.HandleRoomByID))
 
 	fmt.Println("VOW backend running on :8080")
 
