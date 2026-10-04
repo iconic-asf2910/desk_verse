@@ -11,7 +11,15 @@ const Dashboard = () => {
   const [roomName, setRoomName] = useState("");
 
   const navigate = useNavigate();
-  const { rooms, addRoom, removeRoom } = useRoom();
+
+  const {
+    rooms,
+    addRoom,
+    removeRoom,
+    setWorkspaceId,
+    roomError,
+    loadingRooms,
+  } = useRoom();
 
   const roomPositions = {
     1: "left-[3%] top-[10%] w-[34%] h-[38%]",
@@ -42,6 +50,7 @@ const Dashboard = () => {
 
         if (data.length > 0) {
           setWorkspace(data[0].id);
+          setWorkspaceId(data[0].id);
         }
       } catch (error) {
         setWorkspaceError(error.message);
@@ -49,26 +58,27 @@ const Dashboard = () => {
     };
 
     loadWorkspaces();
-  }, []);
+  }, [setWorkspaceId]);
 
-  const handleAddRoom = (event) => {
+  const handleAddRoom = async (event) => {
     event.preventDefault();
 
     if (!roomName.trim()) return;
 
-    addRoom(roomName);
+    await addRoom(roomName);
+
     setRoomName("");
     setShowAddRoom(false);
   };
 
-  const handleRemoveRoom = (roomId) => {
+  const handleRemoveRoom = async (roomId) => {
     const shouldRemove = window.confirm(
       "Are you sure you want to remove this room?"
     );
 
     if (!shouldRemove) return;
 
-    removeRoom(roomId);
+    await removeRoom(roomId);
   };
 
   return (
@@ -84,11 +94,20 @@ const Dashboard = () => {
               {workspaceError}
             </p>
           )}
+
+          {roomError && (
+            <p className="mt-1 text-sm text-red-500">
+              {roomError}
+            </p>
+          )}
         </div>
 
         <select
           value={workspace}
-          onChange={(event) => setWorkspace(event.target.value)}
+          onChange={(event) => {
+            setWorkspace(event.target.value);
+            setWorkspaceId(event.target.value);
+          }}
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none"
         >
           {workspaces.map((item) => (
@@ -133,9 +152,9 @@ const Dashboard = () => {
                 </span>
 
                 <div className="mt-2 flex justify-center gap-2">
-                  {room.people.map((person) => (
+                  {(room.members || []).map((person, index) => (
                     <div
-                      key={person}
+                      key={person || index}
                       className="flex flex-col items-center"
                     >
                       <img
@@ -155,6 +174,12 @@ const Dashboard = () => {
                 </div>
               </button>
             ))}
+
+            {loadingRooms && (
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-white px-4 py-2 text-sm text-slate-500 shadow">
+                Loading rooms...
+              </div>
+            )}
           </div>
         </div>
 

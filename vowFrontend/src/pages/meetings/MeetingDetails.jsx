@@ -12,50 +12,146 @@ const MeetingDetails = () => {
     const meetings = getMeetings();
 
     const selectedMeeting = meetings.find(
-      (item) => String(item.id) === String(id),
+      (item) => String(item.id) === String(id)
     );
 
     setMeeting(selectedMeeting);
   }, [id]);
 
   if (!meeting) {
-    return <p>Meeting not found.</p>;
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f5f6f8] px-5 py-5">
+        <button
+          type="button"
+          onClick={() => navigate("/meetings")}
+          className="mb-5 text-sm text-blue-600 hover:text-blue-700"
+        >
+          ← Back to Meetings
+        </button>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-8">
+          <h1 className="text-xl font-semibold text-slate-900">
+            Meeting not found
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-500">
+            The meeting you are looking for does not exist.
+          </p>
+        </div>
+      </div>
+    );
   }
 
+  const startDate = new Date(meeting.startTime);
+  const endDate = new Date(meeting.endTime);
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-8 py-7">
-      <h1 className="text-2xl font-semibold text-slate-900">{meeting.title}</h1>
-
-      <p className="mt-3 text-slate-600">{meeting.description}</p>
-
-      <div className="mt-6 space-y-3">
-        <p className="text-sm text-slate-700">
-          <span className="font-medium">Meeting ID:</span> {meeting.id}
-        </p>
-
-        <p className="text-sm text-slate-700">
-          <span className="font-medium">Start Time:</span> {meeting.startTime}
-        </p>
-
-        <p className="text-sm text-slate-700">
-          <span className="font-medium">End Time:</span> {meeting.endTime}
-        </p>
-
-        <p className="text-sm text-slate-700">
-          <span className="font-medium">Participants:</span>{" "}
-          {meeting.participants.length > 0
-            ? meeting.participants.join(", ")
-            : "No participants"}
-        </p>
-      </div>
-
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f5f6f8] px-5 py-5">
       <button
         type="button"
-        onClick={() => navigate(`/meetings/${meeting.id}/join`)}
-        className="mt-7 rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        onClick={() => navigate("/meetings")}
+        className="mb-5 text-sm text-blue-600 hover:text-blue-700"
       >
-        Join Meeting
+        ← Back to Meetings
       </button>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-5">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              {meeting.title}
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              {meeting.description || "Virtual Meeting"}
+            </p>
+          </div>
+
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+            Scheduled
+          </span>
+        </div>
+
+        <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">Date</p>
+
+            <p className="mt-1 text-sm font-medium text-slate-800">
+              {startDate.toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">Time</p>
+
+            <p className="mt-1 text-sm font-medium text-slate-800">
+              {startDate.toLocaleTimeString("en-IN", {
+                hour: "numeric",
+                minute: "2-digit",
+              })}{" "}
+              -{" "}
+              {endDate.toLocaleTimeString("en-IN", {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <h2 className="text-base font-medium text-slate-800">
+            Participants
+          </h2>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            {meeting.participants.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No participants added.
+              </p>
+            ) : (
+              meeting.participants.map((participant, index) => (
+                <div
+                  key={`${participant}-${index}`}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                >
+                  <img
+                    src={`/boy${(index % 6) + 1}.png`}
+                    alt={participant}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+
+                  <span className="text-sm text-slate-700">
+                    {participant}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/meetings")}
+            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Back
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/meetings/${meeting.id}/join`)}
+            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Join Meeting
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

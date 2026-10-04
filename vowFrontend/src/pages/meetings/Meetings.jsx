@@ -28,7 +28,7 @@ const Meetings = () => {
 
     return (
       meeting.title.toLowerCase().includes(searchText) ||
-      meeting.description.toLowerCase().includes(searchText)
+      (meeting.description || "").toLowerCase().includes(searchText)
     );
   });
 
@@ -55,6 +55,7 @@ const Meetings = () => {
             type="button"
             onClick={() => {
               setShowSearch((previous) => !previous);
+
               if (showSearch) {
                 setSearch("");
               }

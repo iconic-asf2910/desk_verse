@@ -57,6 +57,8 @@ const RoomDetails = () => {
     );
   }
 
+  const members = currentRoom.members || currentRoom.people || [];
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-5">
       <button
@@ -93,28 +95,34 @@ const RoomDetails = () => {
           </h2>
 
           <div className="space-y-4">
-            {currentRoom.people.map((person) => (
-              <div
-                key={person}
-                className="flex items-center gap-3"
-              >
-                <img
-                  src="/manprofile.png"
-                  alt={person}
-                  className="h-9 w-9 rounded-full object-cover"
-                />
+            {members.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                No members in this room.
+              </p>
+            ) : (
+              members.map((person) => (
+                <div
+                  key={person}
+                  className="flex items-center gap-3"
+                >
+                  <img
+                    src="/manprofile.png"
+                    alt={person}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
 
-                <div>
-                  <p className="text-sm font-medium text-slate-800">
-                    {person}
-                  </p>
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">
+                      {person}
+                    </p>
 
-                  <p className="text-xs text-emerald-600">
-                    Online
-                  </p>
+                    <p className="text-xs text-emerald-600">
+                      Online
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

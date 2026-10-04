@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+/internal/
+/main.go
+/go.mod
+/go.sum
+/.envcd
+# Backend files
+
+/.env.example
+/internal/
+.env
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
