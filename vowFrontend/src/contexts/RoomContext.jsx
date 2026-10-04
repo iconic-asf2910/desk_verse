@@ -1,74 +1,76 @@
 import { createContext, useEffect, useState } from "react";
+import {
+  getRooms,
+  createRoom,
+  deleteRoom,
+} from "../services/api/roomApi";
 
 const RoomContext = createContext();
 
-const defaultRooms = [
-  {
-    id: 1,
-    name: "Design Studio",
-    people: ["Sarah", "Mike"],
-  },
-  {
-    id: 2,
-    name: "Meeting Pod A",
-    people: ["Alex"],
-  },
-  {
-    id: 3,
-    name: "Meeting Pod B",
-    people: ["Emma"],
-  },
-  {
-    id: 4,
-    name: "The Lounge",
-    people: ["Sophia"],
-  },
-  {
-    id: 5,
-    name: "Engineering Bay",
-    people: ["David"],
-  },
-  {
-    id: 6,
-    name: "Quiet Room",
-    people: ["Ryan"],
-  },
-];
-
 const RoomProvider = ({ children }) => {
-  const [rooms, setRooms] = useState(() => {
-    const storedRooms = localStorage.getItem("deskverseRooms");
-
-    if (storedRooms) {
-      return JSON.parse(storedRooms);
-    }
-
-    return defaultRooms;
-  });
-
+  const [rooms, setRooms] = useState([]);
   const [room, setRoom] = useState(null);
+  const [workspaceId, setWorkspaceId] = useState(null);
+  const [roomError, setRoomError] = useState("");
+  const [loadingRooms, setLoadingRooms] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("deskverseRooms", JSON.stringify(rooms));
-  }, [rooms]);
+    if (!workspaceId) {
+      setRooms([]);
+      return;
+    }
 
-  const addRoom = (name) => {
-    const newRoom = {
-      id: Date.now(),
-      name: name.trim(),
-      people: [],
+    const loadRooms = async () => {
+      try {
+        setLoadingRooms(true);
+        setRoomError("");
+
+        const data = await getRooms(workspaceId);
+
+        setRooms(data);
+      } catch (error) {
+        setRoomError(error.message);
+      } finally {
+        setLoadingRooms(false);
+      }
     };
 
-    setRooms((previousRooms) => [
-      ...previousRooms,
-      newRoom,
-    ]);
+    loadRooms();
+  }, [workspaceId]);
+
+  const addRoom = async (name) => {
+    if (!workspaceId || !name.trim()) return;
+
+    try {
+      setRoomError("");
+
+      const newRoom = await createRoom(workspaceId, {
+        name: name.trim(),
+        description: "",
+        type: "general",
+      });
+
+      setRooms((previousRooms) => [
+        ...previousRooms,
+        newRoom,
+      ]);
+    } catch (error) {
+      setRoomError(error.message);
+    }
   };
 
-  const removeRoom = (roomId) => {
-    setRooms((previousRooms) =>
-      previousRooms.filter((room) => room.id !== roomId)
-    );
+  const removeRoom = async (roomId) => {
+    try {
+      setRoomError("");
+
+      await deleteRoom(roomId);
+
+      setRooms((previousRooms) =>
+        previousRooms.filter((item) => item.id !== roomId)
+      );
+    } catch (error) {
+      setRoomError(error.message);
+    }
   };
 
   return (
@@ -78,8 +80,12 @@ const RoomProvider = ({ children }) => {
         setRooms,
         room,
         setRoom,
+        workspaceId,
+        setWorkspaceId,
         addRoom,
         removeRoom,
+        roomError,
+        loadingRooms,
       }}
     >
       {children}
