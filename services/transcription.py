@@ -1,5 +1,8 @@
 from openai import OpenAI
 from io import BytesIO
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = OpenAI()
 
