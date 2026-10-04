@@ -65,7 +65,6 @@ func getUserID(r *http.Request) string {
 
 func getWorkspaceIDFromPath(r *http.Request) string {
 	path := r.URL.Path
-	// Extract workspaceId from path like /api/workspaces/{workspaceId}/rooms
 	parts := strings.Split(path, "/")
 	if len(parts) >= 4 && parts[1] == "api" && parts[2] == "workspaces" {
 		return parts[3]

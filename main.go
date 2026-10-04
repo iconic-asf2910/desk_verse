@@ -8,6 +8,7 @@ import (
 
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
+	"github.com/iconic-asf2910/vow/internal/meeting"
 	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/room"
 	"github.com/iconic-asf2910/vow/internal/workspace"
@@ -42,6 +43,8 @@ func main() {
 		}
 	}))
 	http.HandleFunc("/api/rooms/", middleware.RequireAuth(room.HandleRoomByID))
+	http.HandleFunc("/api/meetings", middleware.RequireAuth(meeting.HandleMeetings))
+	http.HandleFunc("/api/meetings/", middleware.RequireAuth(meeting.HandleMeetingByID))
 
 	fmt.Println("VOW backend running on :8080")
 

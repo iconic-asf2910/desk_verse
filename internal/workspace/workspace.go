@@ -92,7 +92,6 @@ func isOwnerOrAuthorized(r *http.Request, ws *models.Workspace) bool {
 	if ws.OwnerID == userID {
 		return true
 	}
-	// Managers and supervisors can also manage workspaces they belong to
 	role := getRole(r)
 	if role == models.RoleManager || role == models.RoleSupervisor {
 		for _, m := range ws.Members {

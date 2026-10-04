@@ -17,11 +17,9 @@ import (
 	"github.com/iconic-asf2910/vow/internal/models"
 )
 
-// SecretKey for JWT signing
 var SecretKey []byte
 
 func init() {
-	// Load .env file
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found")
 	}
@@ -61,14 +59,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hash password
 	hashedPassword, err := hashPassword(req.Password)
 	if err != nil {
 		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
-	// Connect to MongoDB if not already connected
 	if db.Client == nil {
 		if err := db.Connect(); err != nil {
 			http.Error(w, "Database connection error", http.StatusInternalServerError)
@@ -79,7 +75,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Check if user already exists
 	collection := db.DB.Collection("users")
 	var existing models.User
 	findErr := collection.FindOne(ctx, bson.M{"email": req.Email}).Decode(&existing)
@@ -88,12 +83,11 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user
 	user := &models.User{
 		Name:       req.Name,
 		Email:      req.Email,
 		Password:   hashedPassword,
-		Role:       models.RoleTeamMember, // Default role for new users
+		Role:       models.RoleTeamMember,
 		IsVerified: false,
 		CreatedAt:  time.Now(),
 	}
@@ -108,7 +102,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		user.ID = oid
 	}
 
-	// Return public user (no password) and generate token
 	publicUser := user.ToPublic()
 	token, err := generateToken(user.ID.Hex(), user.Role)
 	if err != nil {
@@ -123,7 +116,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Login handles user authentication
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -145,7 +137,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Connect to MongoDB if not already connected
 	if db.Client == nil {
 		if err := db.Connect(); err != nil {
 			http.Error(w, "Database connection error", http.StatusInternalServerError)
@@ -156,7 +147,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Find user by email
 	var user models.User
 	collection := db.DB.Collection("users")
 	err := collection.FindOne(ctx, bson.M{"email": req.Email}).Decode(&user)
@@ -165,13 +155,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify password
 	if err := verifyPassword(req.Password, user.Password); err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Return public user (no password) and generate token
 	publicUser := user.ToPublic()
 	token, err := generateToken(user.ID.Hex(), user.Role)
 	if err != nil {
@@ -186,18 +174,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// hashPassword hashes a password using bcrypt
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-// verifyPassword checks if a password matches the hash
 func verifyPassword(password string, hash string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-// generateToken creates a JWT token for the user
 func generateToken(userID string, role string) (string, error) {
 	claims := Claims{
 		UserID: userID,

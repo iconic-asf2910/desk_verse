@@ -16,7 +16,6 @@ const (
 	RoleKey   contextKey = "role"
 )
 
-// RequireAuth is a middleware that verifies the JWT token in the Authorization header
 func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -35,7 +34,6 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		claims := &auth.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			// Ensure that the signing method is what we expect
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, http.ErrAbortHandler
 			}
@@ -47,11 +45,9 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Add user information to context
 		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 		ctx = context.WithValue(ctx, RoleKey, claims.Role)
 
-		// Call the next handler with the new context
 		next(w, r.WithContext(ctx))
 	}
 }
