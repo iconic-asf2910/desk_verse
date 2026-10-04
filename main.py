@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from services.transcription import transcribe_audio
+from services.transcribe import transcribe_audio
 
 app = FastAPI(title="AI Meeting Assistant")
 
