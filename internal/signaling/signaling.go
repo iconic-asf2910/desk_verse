@@ -6,17 +6,21 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
+	"github.com/iconic-asf2910/vow/internal/meeting"
 	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 type Client struct {
@@ -59,38 +63,50 @@ func (h *Hub) unregister(client *Client) {
 	defer h.mu.Unlock()
 	if h.clients[client.meeting] != nil {
 		delete(h.clients[client.meeting], client)
+		if len(h.clients[client.meeting]) == 0 {
+			delete(h.clients, client.meeting)
+		}
 	}
 }
 
 func (h *Hub) broadcast(meeting string, msg Message, exclude *Client) {
 	h.mu.RLock()
-	defer h.mu.RUnlock()
+	clients := make([]*Client, 0, len(h.clients[meeting]))
 	for c := range h.clients[meeting] {
-		if c == exclude {
-			continue
+		if c != exclude {
+			clients = append(clients, c)
 		}
-		c.conn.WriteJSON(msg)
+	}
+	h.mu.RUnlock()
+
+	for _, c := range clients {
+		c.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+		err := c.conn.WriteJSON(msg)
+		if err != nil {
+			c.conn.Close()
+			h.unregister(c)
+		}
 	}
 }
 
 func (h *Hub) sendToTarget(meeting string, msg Message, targetUserID string) {
 	h.mu.RLock()
-	defer h.mu.RUnlock()
+	targetClients := make([]*Client, 0)
 	for c := range h.clients[meeting] {
 		if c.userID == targetUserID {
-			c.conn.WriteJSON(msg)
+			targetClients = append(targetClients, c)
 		}
 	}
-}
+	h.mu.RUnlock()
 
-func (h *Hub) getClients(meeting string) []*Client {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	list := make([]*Client, 0)
-	for c := range h.clients[meeting] {
-		list = append(list, c)
+	for _, c := range targetClients {
+		c.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+		err := c.conn.WriteJSON(msg)
+		if err != nil {
+			c.conn.Close()
+			h.unregister(c)
+		}
 	}
-	return list
 }
 
 func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
@@ -149,18 +165,18 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := db.DB.Collection("meetings")
-	var meeting models.Meeting
+	var mtg models.Meeting
 	var objID bson.ObjectID
 	var findErr error
 	objID, findErr = bson.ObjectIDFromHex(meetingID)
 	if findErr == nil {
-		findErr = col.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&meeting)
+		findErr = col.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&mtg)
 	}
 	if findErr != nil {
-		findErr = col.FindOne(context.Background(), bson.M{"meetingCode": meetingID}).Decode(&meeting)
+		findErr = col.FindOne(context.Background(), bson.M{"meetingCode": meetingID}).Decode(&mtg)
 	}
 	if findErr == nil {
-		if !isAuthorizedForMeeting(userID, meeting.WorkspaceID) {
+		if !meeting.IsUserAuthorizedForMeeting(&mtg, userID) {
 			http.Error(w, "Access denied", http.StatusForbidden)
 			return
 		}
@@ -214,41 +230,4 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 			hub.broadcast(meetingID, msg, client)
 		}
 	}
-}
-
-func getUserIDFromContext(r *http.Request) string {
-	val := r.Context().Value(middleware.UserIDKey)
-	if val == nil {
-		return ""
-	}
-	if s, ok := val.(string); ok {
-		return s
-	}
-	return ""
-}
-
-func isAuthorizedForMeeting(userID, workspaceID string) bool {
-	if workspaceID == "" || userID == "" {
-		return false
-	}
-	ctx := context.Background()
-	type ws struct {
-		Members []string `bson:"members"`
-		OwnerID string   `bson:"ownerId"`
-	}
-	var wsData ws
-	err := db.DB.Collection("workspaces").FindOne(ctx, bson.M{"_id": workspaceID}).Decode(&wsData)
-	if err != nil {
-		objID, _ := bson.ObjectIDFromHex(workspaceID)
-		err = db.DB.Collection("workspaces").FindOne(ctx, bson.M{"_id": objID}).Decode(&wsData)
-	}
-	if err != nil {
-		return false
-	}
-	for _, m := range wsData.Members {
-		if m == userID {
-			return true
-		}
-	}
-	return wsData.OwnerID == userID
 }

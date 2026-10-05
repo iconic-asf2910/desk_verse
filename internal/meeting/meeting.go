@@ -82,6 +82,13 @@ func getMeetingIDFromPath(r *http.Request) string {
 	return ""
 }
 
+func IsUserAuthorizedForMeeting(m *models.Meeting, userID string) bool {
+	if m == nil || userID == "" {
+		return false
+	}
+	return isUserInWorkspace(userID, m.WorkspaceID)
+}
+
 func isUserInWorkspace(userID string, workspaceID string) bool {
 	if workspaceID == "" || userID == "" {
 		return false
