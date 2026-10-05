@@ -1,8 +1,15 @@
 import { useState } from "react";
+import useTask from "../../hooks/UseTask";
 
 const Tasks = () => {
   const [task, setTask] = useState("");
-  const [tasks, setTasks] = useState([]);
+
+  const {
+    tasks,
+    addTask,
+    toggleTask,
+    removeTask,
+  } = useTask();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -11,30 +18,8 @@ const Tasks = () => {
       return;
     }
 
-    const newTask = {
-      id: Date.now(),
-      title: task.trim(),
-      completed: false,
-    };
-
-    setTasks((previousTasks) => [...previousTasks, newTask]);
+    addTask(task);
     setTask("");
-  };
-
-  const toggleTask = (id) => {
-    setTasks((previousTasks) =>
-      previousTasks.map((item) =>
-        item.id === id
-          ? { ...item, completed: !item.completed }
-          : item
-      )
-    );
-  };
-
-  const deleteTask = (id) => {
-    setTasks((previousTasks) =>
-      previousTasks.filter((item) => item.id !== id)
-    );
   };
 
   const completedTasks = tasks.filter(
@@ -128,7 +113,7 @@ const Tasks = () => {
 
                     <button
                       type="button"
-                      onClick={() => deleteTask(item.id)}
+                      onClick={() => removeTask(item.id)}
                       className="text-sm font-medium text-red-500 hover:text-red-600"
                     >
                       Delete

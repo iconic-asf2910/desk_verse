@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useWorkspace from "../../hooks/UseWorkspace";
+import useRoom from "../../hooks/UseRoom";
 import WorkspaceHeader from "../../components/workspace/WorkspaceHeader";
 import RoomList from "../../components/workspace/RoomList";
 
@@ -14,6 +15,8 @@ const WorkspaceDetails = () => {
     setWorkspace,
   } = useWorkspace();
 
+  const { setWorkspaceId } = useRoom();
+
   const currentWorkspace = workspaces.find(
     (item) => String(item.id) === String(id)
   );
@@ -22,7 +25,9 @@ const WorkspaceDetails = () => {
     if (currentWorkspace) {
       setWorkspace(currentWorkspace);
     }
-  }, [currentWorkspace, setWorkspace]);
+
+    setWorkspaceId(id);
+  }, [currentWorkspace, id, setWorkspace, setWorkspaceId]);
 
   if (!currentWorkspace && !workspace) {
     return (

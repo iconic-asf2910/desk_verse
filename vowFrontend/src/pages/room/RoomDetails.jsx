@@ -1,18 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useRoom from "../../hooks/UseRoom";
+import { getRoom } from "../../services/api/roomApi";
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { rooms } = useRoom();
 
+  const {
+    rooms,
+    setRoom,
+  } = useRoom();
+
+  const [currentRoom, setCurrentRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [roomError, setRoomError] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-  const currentRoom = rooms.find(
-    (room) => String(room.id) === String(id)
-  );
+  useEffect(() => {
+    const existingRoom = rooms.find(
+      (room) => String(room.id) === String(id)
+    );
+
+    if (existingRoom) {
+      setCurrentRoom(existingRoom);
+      setRoom(existingRoom);
+      setLoading(false);
+      return;
+    }
+
+    const loadRoom = async () => {
+      try {
+        setLoading(true);
+        setRoomError("");
+
+        const data = await getRoom(id);
+
+        setCurrentRoom(data);
+        setRoom(data);
+      } catch (error) {
+        setRoomError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoom();
+  }, [id, rooms, setRoom]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -33,6 +68,16 @@ const RoomDetails = () => {
     setMessage("");
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-5">
+        <p className="text-sm text-slate-500">
+          Loading room...
+        </p>
+      </div>
+    );
+  }
+
   if (!currentRoom) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] px-5 py-5">
@@ -50,7 +95,7 @@ const RoomDetails = () => {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            The room you are looking for does not exist.
+            {roomError || "The room you are looking for does not exist."}
           </p>
         </div>
       </div>
