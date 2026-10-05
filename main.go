@@ -11,6 +11,7 @@ import (
 	"github.com/iconic-asf2910/vow/internal/meeting"
 	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/room"
+	"github.com/iconic-asf2910/vow/internal/message"
 	"github.com/iconic-asf2910/vow/internal/signaling"
 	"github.com/iconic-asf2910/vow/internal/transcript"
 	"github.com/iconic-asf2910/vow/internal/workspace"
@@ -70,6 +71,8 @@ func main() {
 	}))
 	http.HandleFunc("/api/rooms/", middleware.RequireAuth(room.HandleRoomByID))
 	http.HandleFunc("/api/meetings", middleware.RequireAuth(meeting.HandleMeetings))
+	http.HandleFunc("/api/messages/", middleware.RequireAuth(message.HandleMessageByID))
+	http.HandleFunc("/api/messages", middleware.RequireAuth(message.HandleMessages))
 	http.HandleFunc("/api/meetings/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.Contains(path, "/ws") {
