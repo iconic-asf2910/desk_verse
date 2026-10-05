@@ -2,22 +2,26 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useRoom from "../../hooks/UseRoom";
 import { getRoom } from "../../services/api/roomApi";
+import { getMeetings } from "../../services/api/meetingApi";
+import RoomMeeting from "../../components/room/RoomMeeting";
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { rooms, setRoom } = useRoom();
+  const { rooms, setRoom, workspaceId } = useRoom();
 
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [meetingLoading, setMeetingLoading] = useState(false);
   const [roomError, setRoomError] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     const existingRoom = rooms.find(
-      (room) => String(room.id) === String(id)
+      (item) => String(item.id) === String(id)
     );
 
     if (existingRoom) {
@@ -46,6 +50,37 @@ const RoomDetails = () => {
 
     loadRoom();
   }, [id, rooms, setRoom]);
+
+  useEffect(() => {
+    const loadMeeting = async () => {
+      const currentWorkspaceId =
+        currentRoom?.workspaceId || workspaceId;
+
+      if (!currentWorkspaceId || !currentRoom?.id) {
+        setMeeting(null);
+        return;
+      }
+
+      try {
+        setMeetingLoading(true);
+
+        const data = await getMeetings(currentWorkspaceId);
+
+        const roomMeeting = data.find(
+          (item) =>
+            String(item.roomId) === String(currentRoom.id)
+        );
+
+        setMeeting(roomMeeting || null);
+      } catch {
+        setMeeting(null);
+      } finally {
+        setMeetingLoading(false);
+      }
+    };
+
+    loadMeeting();
+  }, [currentRoom, workspaceId]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -125,13 +160,11 @@ const RoomDetails = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/meetings")}
-          className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Join Meeting
-        </button>
+        <RoomMeeting
+          room={currentRoom}
+          meeting={meeting}
+          loading={meetingLoading}
+        />
       </div>
 
       <div className="grid grid-cols-[280px_minmax(0,1fr)] gap-5">

@@ -1,4 +1,4 @@
-import { Bell, Menu } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import useAuth from "../../hooks/UseAuth";
 
@@ -52,12 +52,7 @@ const Navbar = () => {
 
         <div className="mx-4 h-5 w-px bg-white/40" />
 
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-200"
-        >
-          <Menu size={21} strokeWidth={1.8} />
-        </button>
+       
       </div>
     </header>
   );

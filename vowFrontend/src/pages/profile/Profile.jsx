@@ -20,9 +20,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const storedProfile = JSON.parse(
-      localStorage.getItem("deskverseProfile")
-    );
+    const storedProfile = JSON.parse(localStorage.getItem("deskverseProfile"));
 
     const initialProfile = {
       ...defaultProfile,
@@ -30,10 +28,8 @@ const Profile = () => {
       email: storedProfile?.email || user?.email || "",
       jobTitle: storedProfile?.jobTitle || "",
       phone: storedProfile?.phone || "",
-      workLocation:
-        storedProfile?.workLocation || "Delhi, India",
-      gender:
-        storedProfile?.gender || "Prefer not to say",
+      workLocation: storedProfile?.workLocation || "Delhi, India",
+      gender: storedProfile?.gender || "Prefer not to say",
     };
 
     setProfile(initialProfile);
@@ -59,10 +55,7 @@ const Profile = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem(
-      "deskverseProfile",
-      JSON.stringify(profile)
-    );
+    localStorage.setItem("deskverseProfile", JSON.stringify(profile));
 
     setSavedProfile(profile);
     setIsEditing(false);
@@ -82,9 +75,7 @@ const Profile = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f8fafc] px-8 py-7">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">
-          My Profile
-        </h1>
+        <h1 className="text-xl font-semibold text-slate-900">My Profile</h1>
 
         {!isEditing && (
           <button
@@ -152,8 +143,7 @@ const Profile = () => {
               type="email"
               name="email"
               value={profile.email}
-              onChange={handleChange}
-              disabled={!isEditing}
+              disabled
               placeholder="Email Address"
               className={inputClass}
             />
@@ -206,14 +196,10 @@ const Profile = () => {
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Non-binary">Non-binary</option>
-                <option value="Prefer not to say">
-                  Prefer not to say
-                </option>
+                <option value="Prefer not to say">Prefer not to say</option>
               </select>
             ) : (
-              <div className={displayClass}>
-                {profile.gender}
-              </div>
+              <div className={displayClass}>{profile.gender}</div>
             )}
           </div>
         </div>

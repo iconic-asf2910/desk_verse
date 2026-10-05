@@ -1,12 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import workspaces from "../../data/workspaces";
+import useWorkspace from "../../hooks/UseWorkspace";
 
 const WorkspaceOverview = () => {
+  const { workspaces, loadingWorkspaces } = useWorkspace();
   const navigate = useNavigate();
 
   const handleWorkspaceClick = (workspace) => {
     navigate(`/workspaces/${workspace.id}`);
   };
+
+  if (loadingWorkspaces) {
+    return <p>Loading workspaces...</p>;
+  }
 
   return (
     <section>
