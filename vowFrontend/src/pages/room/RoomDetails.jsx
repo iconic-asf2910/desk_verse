@@ -7,10 +7,7 @@ const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const {
-    rooms,
-    setRoom,
-  } = useRoom();
+  const { rooms, setRoom } = useRoom();
 
   const [currentRoom, setCurrentRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +37,7 @@ const RoomDetails = () => {
         setCurrentRoom(data);
         setRoom(data);
       } catch (error) {
+        setCurrentRoom(null);
         setRoomError(error.message);
       } finally {
         setLoading(false);
@@ -95,7 +93,8 @@ const RoomDetails = () => {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            {roomError || "The room you are looking for does not exist."}
+            {roomError ||
+              "The room you are looking for does not exist."}
           </p>
         </div>
       </div>

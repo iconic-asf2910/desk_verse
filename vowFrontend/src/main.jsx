@@ -11,13 +11,15 @@ import { TaskProvider } from "./contexts/TaskContext";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-     <AuthProvider>
-  <RoomProvider>
-    <TaskProvider>
-      <App />
-    </TaskProvider>
-  </RoomProvider>
-</AuthProvider>
+      <AuthProvider>
+        <WorkspaceProvider>
+          <RoomProvider>
+            <TaskProvider>
+              <App />
+            </TaskProvider>
+          </RoomProvider>
+        </WorkspaceProvider>
+      </AuthProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 );

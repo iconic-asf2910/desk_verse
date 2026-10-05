@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMeetings, saveMeetings } from "../../utils/meetingStorage";
+import useWorkspace from "../../hooks/UseWorkspace";
+import { createMeeting } from "../../services/api/meetingApi";
 
 const CreateMeeting = () => {
   const navigate = useNavigate();
+
+  const { workspace } = useWorkspace();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -12,11 +15,14 @@ const CreateMeeting = () => {
   const [participantInput, setParticipantInput] = useState("");
   const [participants, setParticipants] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const addParticipant = () => {
     const participant = participantInput.trim();
 
-    if (!participant) return;
+    if (!participant) {
+      return;
+    }
 
     if (participants.includes(participant)) {
       setParticipantInput("");
@@ -37,30 +43,44 @@ const CreateMeeting = () => {
     );
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     setError("");
+
+    if (!workspace?.id) {
+      setError("Please select a workspace first.");
+      return;
+    }
 
     if (new Date(endTime) <= new Date(startTime)) {
       setError("End time must be after start time.");
       return;
     }
 
-    const meetingData = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      startTime,
-      endTime,
-      participants,
-    };
+    try {
+      setLoading(true);
 
-    const existingMeetings = getMeetings();
+      const meetingData = {
+        workspaceId: workspace.id,
+        roomId: "",
+        title: title.trim(),
+        description: description.trim(),
+        participants,
+        startTime: new Date(startTime).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+      };
 
-    saveMeetings([...existingMeetings, meetingData]);
+      const createdMeeting = await createMeeting(
+        meetingData
+      );
 
-    navigate(`/meetings/${meetingData.id}`);
+      navigate(`/meetings/${createdMeeting.id}`);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,7 +101,9 @@ const CreateMeeting = () => {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Create a meeting and invite participants.
+              {workspace
+                ? `Create a meeting in ${workspace.name}.`
+                : "Select a workspace before creating a meeting."}
             </p>
           </div>
 
@@ -100,7 +122,9 @@ const CreateMeeting = () => {
               <input
                 type="text"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
                 placeholder="Enter meeting title"
                 required
                 className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -226,9 +250,10 @@ const CreateMeeting = () => {
 
               <button
                 type="submit"
-                className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+                disabled={loading || !workspace}
+                className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Create Meeting
+                {loading ? "Creating..." : "Create Meeting"}
               </button>
             </div>
           </form>

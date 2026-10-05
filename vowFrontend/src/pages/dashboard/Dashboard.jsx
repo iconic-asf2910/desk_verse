@@ -1,16 +1,21 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useRoom from "../../hooks/UseRoom";
-import { getWorkspaces } from "../../services/api/workspaceApi";
+import useWorkspace from "../../hooks/UseWorkspace";
 
 const Dashboard = () => {
-  const [workspaces, setWorkspaces] = useState([]);
-  const [workspace, setWorkspace] = useState("");
-  const [workspaceError, setWorkspaceError] = useState("");
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
 
   const navigate = useNavigate();
+
+  const {
+    workspace,
+    workspaces,
+    selectWorkspace,
+    workspaceError,
+    loadingWorkspaces,
+  } = useWorkspace();
 
   const {
     rooms,
@@ -39,31 +44,10 @@ const Dashboard = () => {
     6: "/boy6.png",
   };
 
-  useEffect(() => {
-    const loadWorkspaces = async () => {
-      try {
-        setWorkspaceError("");
-
-        const data = await getWorkspaces();
-
-        setWorkspaces(data);
-
-        if (data.length > 0) {
-          setWorkspace(data[0].id);
-          setWorkspaceId(data[0].id);
-        }
-      } catch (error) {
-        setWorkspaceError(error.message);
-      }
-    };
-
-    loadWorkspaces();
-  }, [setWorkspaceId]);
-
   const handleWorkspaceChange = (event) => {
     const workspaceId = event.target.value;
 
-    setWorkspace(workspaceId);
+    selectWorkspace(workspaceId);
     setWorkspaceId(workspaceId);
   };
 
@@ -114,13 +98,16 @@ const Dashboard = () => {
         </div>
 
         <select
-          value={workspace}
+          value={workspace?.id || ""}
           onChange={handleWorkspaceChange}
+          disabled={loadingWorkspaces}
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none"
         >
           {workspaces.length === 0 ? (
             <option value="">
-              No workspaces
+              {loadingWorkspaces
+                ? "Loading workspaces..."
+                : "No workspaces"}
             </option>
           ) : (
             workspaces.map((item) => (

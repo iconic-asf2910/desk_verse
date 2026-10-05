@@ -1,4 +1,3 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Home from "../pages/home/Home";
 import Login from "../pages/auth/Login";
@@ -27,24 +26,39 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      <Route element={<MainLayout />}>
-        <Route path="/rooms/:id" element={<RoomDetails />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/meetings/create" element={<CreateMeeting />} />
-        <Route path="/meetings" element={<Meetings />} />
-        <Route path="/meetings/:id" element={<MeetingDetails />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
 
-        <Route path="/workspaces" element={<Workspaces />} />
-        <Route path="/workspaces/:id" element={<WorkspaceDetails />} />
-        <Route path="/rooms" element={<Rooms />} />
+          <Route path="/workspaces" element={<Workspaces />} />
+          <Route
+            path="/workspaces/:id"
+            element={<WorkspaceDetails />}
+          />
 
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/polls" element={<Polls />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/meetings/:id/join" element={<JoinMeeting />} />
-        
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/rooms/:id" element={<RoomDetails />} />
+
+          <Route path="/meetings" element={<Meetings />} />
+          <Route
+            path="/meetings/create"
+            element={<CreateMeeting />}
+          />
+          <Route
+            path="/meetings/:id"
+            element={<MeetingDetails />}
+          />
+          <Route
+            path="/meetings/:id/join"
+            element={<JoinMeeting />}
+          />
+
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/polls" element={<Polls />} />
+          <Route path="/analytics" element={<Analytics />} />
+        </Route>
       </Route>
     </Routes>
   );
