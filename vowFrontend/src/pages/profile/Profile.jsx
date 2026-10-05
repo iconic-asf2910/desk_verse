@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/UseAuth";
 
 const defaultProfile = {
@@ -11,7 +12,8 @@ const defaultProfile = {
 };
 
 const Profile = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const [profile, setProfile] = useState(defaultProfile);
   const [savedProfile, setSavedProfile] = useState(defaultProfile);
@@ -64,6 +66,11 @@ const Profile = () => {
 
     setSavedProfile(profile);
     setIsEditing(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   const inputClass =
@@ -184,31 +191,31 @@ const Profile = () => {
             />
           </div>
 
-         <div>
-  <label className="mb-2 block text-sm font-medium text-slate-700">
-    Gender
-  </label>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Gender
+            </label>
 
-  {isEditing ? (
-    <select
-      name="gender"
-      value={profile.gender}
-      onChange={handleChange}
-      className={inputClass}
-    >
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Non-binary">Non-binary</option>
-      <option value="Prefer not to say">
-        Prefer not to say
-      </option>
-    </select>
-  ) : (
-    <div className={displayClass}>
-      {profile.gender}
-    </div>
-  )}
-</div>
+            {isEditing ? (
+              <select
+                name="gender"
+                value={profile.gender}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Prefer not to say">
+                  Prefer not to say
+                </option>
+              </select>
+            ) : (
+              <div className={displayClass}>
+                {profile.gender}
+              </div>
+            )}
+          </div>
         </div>
 
         {isEditing && (
@@ -227,6 +234,18 @@ const Profile = () => {
               className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
             >
               Save Changes
+            </button>
+          </div>
+        )}
+
+        {!isEditing && (
+          <div className="mt-7 border-t border-slate-100 pt-5">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-md border border-red-200 bg-white px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              Logout
             </button>
           </div>
         )}

@@ -26,7 +26,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      <Route element={<ProtectedRoute />}>
+      {/* <Route element={<ProtectedRoute />}> */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
@@ -59,7 +59,7 @@ const AppRoutes = () => {
           <Route path="/polls" element={<Polls />} />
           <Route path="/analytics" element={<Analytics />} />
         </Route>
-      </Route>
+      {/* </Route> */}
     </Routes>
   );
 };
