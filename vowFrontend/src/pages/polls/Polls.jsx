@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Plus, X, Trash2 } from "lucide-react";
+import useAuth from "../../hooks/UseAuth";
 
 const initialPolls = [
   {
     id: 1,
     title: "Preferred day for Q4 All-Hands?",
-    createdBy: "Mike",
+    createdBy: "Team Member",
     participants: 45,
     question: "Which day of the week works best for you?",
     options: [
@@ -16,7 +18,7 @@ const initialPolls = [
   {
     id: 2,
     title: "Best day for team collaboration?",
-    createdBy: "Sarah",
+    createdBy: "Team Member",
     participants: 32,
     question: "Which day works best for team collaboration?",
     options: [
@@ -41,7 +43,7 @@ const initialPolls = [
   {
     id: 4,
     title: "Preferred meeting style?",
-    createdBy: "Alex",
+    createdBy: "Team Member",
     participants: 41,
     question: "Which meeting style do you prefer?",
     options: [
@@ -53,7 +55,7 @@ const initialPolls = [
   {
     id: 5,
     title: "Best time for team meetings?",
-    createdBy: "David",
+    createdBy: "Team Member",
     participants: 29,
     question: "What time works best for team meetings?",
     options: [
@@ -64,31 +66,25 @@ const initialPolls = [
   },
 ];
 
-const leaderboard = [
-  {
-    rank: 1,
-    name: "Sarah",
-    points: 125,
-    avatar: "/boy1.png",
-  },
-  {
-    rank: 2,
-    name: "Mike",
-    points: 110,
-    avatar: "/boy2.png",
-  },
-  {
-    rank: 3,
-    name: "David",
-    points: 95,
-    avatar: "/boy4.png",
-  },
+const barColors = [
+  "bg-blue-500",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-orange-500",
+  "bg-pink-500",
 ];
 
 const Polls = () => {
+  const { user } = useAuth();
+
+  const currentUserName = user?.name || "User";
+
   const [polls, setPolls] = useState(initialPolls);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [votedPolls, setVotedPolls] = useState({});
+  const [showCreatePoll, setShowCreatePoll] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", ""]);
 
   const getTotalVotes = (poll) => {
     return poll.options.reduce(
@@ -119,6 +115,7 @@ const Polls = () => {
 
         return {
           ...poll,
+          participants: poll.participants + 1,
           options: poll.options.map((option) =>
             option.id === selectedOption
               ? {
@@ -137,12 +134,86 @@ const Polls = () => {
     }));
   };
 
+  const handleAddOption = () => {
+    setOptions((previous) => [...previous, ""]);
+  };
+
+  const handleRemoveOption = (index) => {
+    if (options.length <= 2) {
+      return;
+    }
+
+    setOptions((previous) =>
+      previous.filter((_, optionIndex) => optionIndex !== index)
+    );
+  };
+
+  const handleOptionInput = (index, value) => {
+    setOptions((previous) =>
+      previous.map((option, optionIndex) =>
+        optionIndex === index ? value : option
+      )
+    );
+  };
+
+  const handleCreatePoll = (event) => {
+    event.preventDefault();
+
+    const trimmedQuestion = question.trim();
+
+    const trimmedOptions = options
+      .map((option) => option.trim())
+      .filter(Boolean);
+
+    if (!trimmedQuestion || trimmedOptions.length < 2) {
+      return;
+    }
+
+    const newPoll = {
+      id: Date.now(),
+      title: trimmedQuestion,
+      createdBy: currentUserName,
+      participants: 0,
+      question: trimmedQuestion,
+      options: trimmedOptions.map((label, index) => ({
+        id: index + 1,
+        label,
+        votes: 0,
+      })),
+    };
+
+    setPolls((previous) => [newPoll, ...previous]);
+    setQuestion("");
+    setOptions(["", ""]);
+    setShowCreatePoll(false);
+  };
+
+  const handleDeletePoll = (pollId) => {
+    setPolls((previousPolls) =>
+      previousPolls.filter((poll) => poll.id !== pollId)
+    );
+
+    setSelectedOptions((previous) => {
+      const updated = { ...previous };
+      delete updated[pollId];
+      return updated;
+    });
+
+    setVotedPolls((previous) => {
+      const updated = { ...previous };
+      delete updated[pollId];
+      return updated;
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#f8fafc]">
       <div className="flex h-full flex-col">
         <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
           <div>
-            <p className="text-xs text-slate-500">Acme Corp HQ</p>
+            <p className="text-xs text-slate-500">
+              DeskVerse
+            </p>
 
             <h1 className="text-xl font-semibold text-slate-900">
               Engagement Hub
@@ -151,9 +222,11 @@ const Polls = () => {
 
           <button
             type="button"
-            className="rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+            onClick={() => setShowCreatePoll(true)}
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
-            My Active Polls
+            <Plus size={16} />
+            Create Poll
           </button>
         </header>
 
@@ -168,7 +241,7 @@ const Polls = () => {
             </p>
           </div>
 
-          <div className="flex w-full gap-4 overflow-x-auto pb-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {polls.map((poll) => {
               const totalVotes = getTotalVotes(poll);
               const selectedOption = selectedOptions[poll.id];
@@ -177,11 +250,11 @@ const Polls = () => {
               return (
                 <section
                   key={poll.id}
-                  className="w-[320px] shrink-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+                  className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold text-slate-900">
                         {poll.title}
                       </h3>
 
@@ -191,11 +264,22 @@ const Polls = () => {
                       </p>
                     </div>
 
-                    {hasVoted && (
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-medium text-emerald-600">
-                        Voted
-                      </span>
-                    )}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {hasVoted && (
+                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-medium text-emerald-600">
+                          Voted
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePoll(poll.id)}
+                        title="Delete poll"
+                        className="text-slate-400 hover:text-red-500"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
 
                   <p className="mt-4 text-xs font-medium text-slate-800">
@@ -203,7 +287,7 @@ const Polls = () => {
                   </p>
 
                   <div className="mt-4 space-y-3">
-                    {poll.options.map((option) => {
+                    {poll.options.map((option, index) => {
                       const percentage =
                         totalVotes > 0
                           ? Math.round(
@@ -212,7 +296,10 @@ const Polls = () => {
                           : 0;
 
                       return (
-                        <label key={option.id} className="block">
+                        <label
+                          key={option.id}
+                          className="block"
+                        >
                           <div className="flex items-center gap-2">
                             <input
                               type="radio"
@@ -228,15 +315,15 @@ const Polls = () => {
                                   option.id
                                 )
                               }
-                              className="h-3.5 w-3.5 accent-slate-800"
+                              className="h-3.5 w-3.5 accent-blue-600"
                             />
 
-                            <span className="flex-1 text-[11px] text-slate-700">
+                            <span className="min-w-0 flex-1 text-[11px] text-slate-700">
                               {option.label}
                             </span>
 
                             {hasVoted && (
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] font-medium text-slate-500">
                                 {percentage}%
                               </span>
                             )}
@@ -245,7 +332,11 @@ const Polls = () => {
                           {hasVoted && (
                             <div className="ml-5 mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
                               <div
-                                className="h-full rounded-full bg-blue-600 transition-all"
+                                className={`h-full rounded-full transition-all ${
+                                  barColors[
+                                    index % barColors.length
+                                  ]
+                                }`}
                                 style={{
                                   width: `${percentage}%`,
                                 }}
@@ -272,56 +363,206 @@ const Polls = () => {
             })}
           </div>
 
-          <p className="mt-1 text-[10px] text-slate-400">
-            Scroll horizontally to view more polls →
-          </p>
-
-          <section className="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-5 py-3">
-              <h2 className="text-sm font-semibold text-slate-900">
+          <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="text-center">
+              <h2 className="text-base font-semibold text-slate-900">
                 Leaderboard
               </h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Top contributors in the workspace
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-3 md:divide-x md:divide-y-0">
-              {leaderboard.map((person) => (
-                <div
-                  key={person.rank}
-                  className="flex items-center gap-3 px-5 py-4"
-                >
-                  <span className="w-8 text-xs font-semibold text-slate-400">
-                    {person.rank === 1
-                      ? "1st"
-                      : person.rank === 2
-                      ? "2nd"
-                      : "3rd"}
-                  </span>
+            <div className="mt-8 flex items-end justify-center gap-2">
+              <div className="flex w-28 flex-col items-center">
+                <div className="mb-2 text-lg">🥈</div>
 
-                  <img
-                    src={person.avatar}
-                    alt={person.name}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
+                <img
+                  src="/manprofile.png"
+                  alt="Second place"
+                  className="h-12 w-12 rounded-full object-cover ring-2 ring-slate-300"
+                />
 
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-slate-800">
-                      {person.name}
-                    </p>
+                <p className="mt-2 text-sm font-semibold text-slate-700">
+                  Team Member
+                </p>
 
-                    <p className="mt-0.5 text-[10px] text-slate-500">
-                      Rank #{person.rank}
-                    </p>
-                  </div>
+                <p className="text-xs text-slate-500">
+                  2nd Place
+                </p>
 
-                  <span className="text-[10px] font-medium text-slate-500">
-                    {person.points} pts.
+                <div className="mt-3 flex h-20 w-full items-end justify-center rounded-t-lg bg-slate-200">
+                  <span className="mb-3 text-lg font-bold text-slate-600">
+                    2
                   </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex w-32 flex-col items-center">
+                <div className="mb-2 text-2xl">🥇</div>
+
+                <img
+                  src="/manprofile.png"
+                  alt={currentUserName}
+                  className="h-16 w-16 rounded-full object-cover ring-4 ring-yellow-300"
+                />
+
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {currentUserName}
+                </p>
+
+                <p className="text-xs text-slate-500">
+                  1st Place
+                </p>
+
+                <div className="mt-3 flex h-32 w-full items-end justify-center rounded-t-lg bg-yellow-100">
+                  <span className="mb-3 text-xl font-bold text-yellow-600">
+                    1
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex w-28 flex-col items-center">
+                <div className="mb-2 text-lg">🥉</div>
+
+                <img
+                  src="/manprofile.png"
+                  alt="Third place"
+                  className="h-12 w-12 rounded-full object-cover ring-2 ring-orange-300"
+                />
+
+                <p className="mt-2 text-sm font-semibold text-slate-700">
+                  Team Member
+                </p>
+
+                <p className="text-xs text-slate-500">
+                  3rd Place
+                </p>
+
+                <div className="mt-3 flex h-16 w-full items-end justify-center rounded-t-lg bg-orange-100">
+                  <span className="mb-3 text-lg font-bold text-orange-600">
+                    3
+                  </span>
+                </div>
+              </div>
             </div>
           </section>
         </main>
       </div>
+
+      {showCreatePoll && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Create Poll
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => setShowCreatePoll(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCreatePoll}
+              className="mt-5"
+            >
+              <label className="text-sm font-medium text-slate-700">
+                Question
+              </label>
+
+              <input
+                type="text"
+                value={question}
+                onChange={(event) =>
+                  setQuestion(event.target.value)
+                }
+                placeholder="Enter your question..."
+                className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+              />
+
+              <div className="mt-5 flex items-center justify-between">
+                <label className="text-sm font-medium text-slate-700">
+                  Options
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleAddOption}
+                  className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                >
+                  <Plus size={14} />
+                  Add option
+                </button>
+              </div>
+
+              <div className="mt-2 space-y-2">
+                {options.map((option, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(event) =>
+                        handleOptionInput(
+                          index,
+                          event.target.value
+                        )
+                      }
+                      placeholder={`Option ${index + 1}`}
+                      className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleRemoveOption(index)
+                      }
+                      disabled={options.length <= 2}
+                      title="Remove option"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowCreatePoll(false)
+                  }
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={
+                    !question.trim() ||
+                    options.filter(
+                      (option) => option.trim()
+                    ).length < 2
+                  }
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Create Poll
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
