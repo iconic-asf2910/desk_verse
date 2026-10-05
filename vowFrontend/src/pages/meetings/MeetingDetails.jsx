@@ -1,22 +1,43 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMeetings } from "../../utils/meetingStorage";
+import { getMeeting } from "../../services/api/meetingApi";
 
 const MeetingDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [meeting, setMeeting] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const meetings = getMeetings();
+    const loadMeeting = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    const selectedMeeting = meetings.find(
-      (item) => String(item.id) === String(id)
-    );
+        const data = await getMeeting(id);
 
-    setMeeting(selectedMeeting);
+        setMeeting(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMeeting();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f5f6f8] px-5 py-5">
+        <p className="text-sm text-slate-500">
+          Loading meeting...
+        </p>
+      </div>
+    );
+  }
 
   if (!meeting) {
     return (
@@ -35,7 +56,7 @@ const MeetingDetails = () => {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            The meeting you are looking for does not exist.
+            {error || "The meeting does not exist."}
           </p>
         </div>
       </div>
@@ -69,13 +90,15 @@ const MeetingDetails = () => {
           </div>
 
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
-            Scheduled
+            {meeting.status || "Scheduled"}
           </span>
         </div>
 
         <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500">Date</p>
+            <p className="text-xs text-slate-500">
+              Date
+            </p>
 
             <p className="mt-1 text-sm font-medium text-slate-800">
               {startDate.toLocaleDateString("en-IN", {
@@ -88,7 +111,9 @@ const MeetingDetails = () => {
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500">Time</p>
+            <p className="text-xs text-slate-500">
+              Time
+            </p>
 
             <p className="mt-1 text-sm font-medium text-slate-800">
               {startDate.toLocaleTimeString("en-IN", {
@@ -100,6 +125,28 @@ const MeetingDetails = () => {
                 hour: "numeric",
                 minute: "2-digit",
               })}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">
+              Meeting Code
+            </p>
+
+            <p className="mt-1 text-sm font-medium text-slate-800">
+              {meeting.meetingCode || "Not available"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500">
+              Participants
+            </p>
+
+            <p className="mt-1 text-sm font-medium text-slate-800">
+              {participants.length}
             </p>
           </div>
         </div>
@@ -146,7 +193,9 @@ const MeetingDetails = () => {
 
           <button
             type="button"
-            onClick={() => navigate(`/meetings/${meeting.id}/join`)}
+            onClick={() =>
+              navigate(`/meetings/${meeting.id}/join`)
+            }
             className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
           >
             Join Meeting

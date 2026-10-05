@@ -3,28 +3,18 @@ import {
   getSocket,
   sendMessage,
   subscribeToMessages,
+  subscribeToConnection,
   disconnectSocket,
 } from "../services/websocket/socket";
 
 const useWebSocket = () => {
-  const connect = (url, token) => {
-    return connectSocket(url, token);
-  };
-
-  const disconnect = () => {
-    disconnectSocket();
-  };
-
-  const getConnection = () => {
-    return getSocket();
-  };
-
   return {
-    connect,
-    disconnect,
-    getConnection,
+    connect: connectSocket,
+    disconnect: disconnectSocket,
+    getConnection: getSocket,
     sendMessage,
     subscribeToMessages,
+    subscribeToConnection,
   };
 };
 

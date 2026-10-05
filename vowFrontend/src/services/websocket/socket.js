@@ -1,12 +1,25 @@
 let socket = null;
 let messageListeners = [];
+let connectionListeners = [];
 
 const connectSocket = (url, token) => {
   return new Promise((resolve, reject) => {
-    socket = new WebSocket(`${url}?token=${token}`);
+    if (socket?.readyState === WebSocket.OPEN) {
+      resolve(socket);
+      return;
+    }
+
+    const separator = url.includes("?") ? "&" : "?";
+
+    socket = new WebSocket(
+      `${url}${separator}token=${encodeURIComponent(token)}`
+    );
 
     socket.onopen = () => {
-      console.log("WebSocket connected");
+      connectionListeners.forEach((listener) =>
+        listener({ type: "connected" })
+      );
+
       resolve(socket);
     };
 
@@ -17,18 +30,32 @@ const connectSocket = (url, token) => {
         messageListeners.forEach((listener) => {
           listener(message);
         });
-      } catch (error) {
-        console.error("Failed to parse WebSocket message:", error);
+      } catch {
+        messageListeners.forEach((listener) => {
+          listener({
+            type: "message",
+            data: event.data,
+          });
+        });
       }
     };
 
     socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      connectionListeners.forEach((listener) =>
+        listener({
+          type: "error",
+          error,
+        })
+      );
+
       reject(error);
     };
 
     socket.onclose = () => {
-      console.log("WebSocket disconnected");
+      connectionListeners.forEach((listener) =>
+        listener({ type: "disconnected" })
+      );
+
       socket = null;
     };
   });
@@ -39,17 +66,13 @@ const getSocket = () => {
 };
 
 const sendMessage = (message) => {
-  if (!socket) {
-    console.error("WebSocket is not connected");
-    return;
-  }
-
-  if (socket.readyState !== WebSocket.OPEN) {
-    console.error("WebSocket connection is not open");
-    return;
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    return false;
   }
 
   socket.send(JSON.stringify(message));
+
+  return true;
 };
 
 const subscribeToMessages = (listener) => {
@@ -62,13 +85,24 @@ const subscribeToMessages = (listener) => {
   };
 };
 
+const subscribeToConnection = (listener) => {
+  connectionListeners.push(listener);
+
+  return () => {
+    connectionListeners = connectionListeners.filter(
+      (item) => item !== listener
+    );
+  };
+};
+
 const disconnectSocket = () => {
   if (socket) {
     socket.close();
-    socket = null;
   }
 
+  socket = null;
   messageListeners = [];
+  connectionListeners = [];
 };
 
 export {
@@ -76,5 +110,6 @@ export {
   getSocket,
   sendMessage,
   subscribeToMessages,
+  subscribeToConnection,
   disconnectSocket,
 };
