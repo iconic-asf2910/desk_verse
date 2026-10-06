@@ -199,6 +199,16 @@ func generateToken(userID string, role string) (string, error) {
 	return token.SignedString(SecretKey)
 }
 
+func Logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out"})
+}
+
 func ParseToken(tokenString string, claims *Claims) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

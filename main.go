@@ -6,11 +6,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/iconic-asf2910/vow/internal/analytics"
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
+	"github.com/iconic-asf2910/vow/internal/gaming"
 	"github.com/iconic-asf2910/vow/internal/meeting"
 	"github.com/iconic-asf2910/vow/internal/message"
 	"github.com/iconic-asf2910/vow/internal/middleware"
+	"github.com/iconic-asf2910/vow/internal/poll"
+	"github.com/iconic-asf2910/vow/internal/presence"
 	"github.com/iconic-asf2910/vow/internal/room"
 	"github.com/iconic-asf2910/vow/internal/signaling"
 	"github.com/iconic-asf2910/vow/internal/task"
@@ -61,6 +65,7 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/api/auth/signup", auth.Signup)
 	http.HandleFunc("/api/auth/login", auth.Login)
+	http.HandleFunc("/api/auth/logout", middleware.RequireAuth(auth.Logout))
 	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
 	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -76,6 +81,28 @@ func main() {
 	http.HandleFunc("/api/messages", middleware.RequireAuth(message.HandleMessages))
 	http.HandleFunc("/api/tasks/", middleware.RequireAuth(task.HandleTaskByID))
 	http.HandleFunc("/api/tasks", middleware.RequireAuth(task.HandleTasks))
+	http.HandleFunc("/api/polls/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if strings.Contains(path, "/vote") {
+			poll.HandlePollVote(w, r)
+		} else if strings.Contains(path, "/close") {
+			poll.HandlePollClose(w, r)
+		} else {
+			poll.HandlePollByID(w, r)
+		}
+	}))
+	http.HandleFunc("/api/polls", middleware.RequireAuth(poll.HandlePolls))
+	http.HandleFunc("/api/presence/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			presence.UpdatePresenceStatus(w, r)
+		} else {
+			presence.GetPresence(w, r)
+		}
+	}))
+	http.HandleFunc("/api/presence", middleware.RequireAuth(presence.HandlePresence))
+	http.HandleFunc("/api/analytics", middleware.RequireAuth(analytics.HandleAnalytics))
+	http.HandleFunc("/api/gaming/", middleware.RequireAuth(gaming.HandleGamingByID))
+	http.HandleFunc("/api/gaming", middleware.RequireAuth(gaming.HandleGaming))
 	http.HandleFunc("/api/meetings/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.Contains(path, "/ws") {

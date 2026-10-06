@@ -193,6 +193,10 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.M{"workspaceId": workspaceID}
+	assignedTo := r.URL.Query().Get("assignedTo")
+	if assignedTo != "" {
+		filter["assignedTo"] = assignedTo
+	}
 	cursor, err := col.Find(ctx, filter, options.Find().SetSort(bson.M{"createdAt": 1}))
 	if err != nil {
 		http.Error(w, "Failed to list tasks", http.StatusInternalServerError)
