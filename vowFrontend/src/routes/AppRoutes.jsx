@@ -42,8 +42,8 @@ const AppRoutes = () => {
         path="/signup"
         element={<Signup />}
       />
-{/* 
-      <Route element={<ProtectedRoute />}> */}
+
+      <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           <Route
             path="/dashboard"
@@ -125,7 +125,7 @@ const AppRoutes = () => {
             element={<Notifications />}
           />
         </Route>
-      {/* </Route> */}
+      </Route>
     </Routes>
   );
 };
