@@ -9,21 +9,45 @@ const connectSocket = (url, token) => {
       return;
     }
 
+    if (socket?.readyState === WebSocket.CONNECTING) {
+      const checkConnection = () => {
+        if (socket?.readyState === WebSocket.OPEN) {
+          resolve(socket);
+          return;
+        }
+
+        if (
+          !socket ||
+          socket.readyState === WebSocket.CLOSED
+        ) {
+          reject(new Error("WebSocket connection failed."));
+          return;
+        }
+
+        setTimeout(checkConnection, 50);
+      };
+
+      checkConnection();
+      return;
+    }
+
     const separator = url.includes("?") ? "&" : "?";
 
-    socket = new WebSocket(
+    const ws = new WebSocket(
       `${url}${separator}token=${encodeURIComponent(token)}`
     );
 
-    socket.onopen = () => {
+    socket = ws;
+
+    ws.onopen = () => {
       connectionListeners.forEach((listener) =>
         listener({ type: "connected" })
       );
 
-      resolve(socket);
+      resolve(ws);
     };
 
-    socket.onmessage = (event) => {
+    ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
 
@@ -40,7 +64,7 @@ const connectSocket = (url, token) => {
       }
     };
 
-    socket.onerror = (error) => {
+    ws.onerror = (error) => {
       connectionListeners.forEach((listener) =>
         listener({
           type: "error",
@@ -51,12 +75,14 @@ const connectSocket = (url, token) => {
       reject(error);
     };
 
-    socket.onclose = () => {
+    ws.onclose = () => {
       connectionListeners.forEach((listener) =>
         listener({ type: "disconnected" })
       );
 
-      socket = null;
+      if (socket === ws) {
+        socket = null;
+      }
     };
   });
 };
