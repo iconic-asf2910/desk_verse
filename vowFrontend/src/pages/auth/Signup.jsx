@@ -34,9 +34,11 @@ const Signup = () => {
 
       <div className="relative z-10 flex w-full max-w-6xl items-center justify-center gap-80 px-8">
         <div className="flex w-[32%] flex-col items-center text-center text-white">
-          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border-2 border-white">
-            <div className="h-7 w-7 rounded-full border border-white" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="DeskVerse Logo"
+            className="mb-5 h-16 w-16 object-contain"
+          />
 
           <h1 className="text-5xl font-semibold tracking-tight">
             DeskVerse

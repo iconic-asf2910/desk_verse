@@ -1,12 +1,23 @@
-import { createContext, useState } from "react";
-import { loginUser, signupUser } from "../services/api/authApi";
+import {
+  createContext,
+  useState,
+} from "react";
+
+import {
+  loginUser,
+  signupUser,
+} from "../services/api/authApi";
 
 const AuthContext = createContext();
 
 const getStoredUser = () => {
   try {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    const storedUser =
+      localStorage.getItem("user");
+
+    return storedUser
+      ? JSON.parse(storedUser)
+      : null;
   } catch {
     localStorage.removeItem("user");
     return null;
@@ -14,33 +25,78 @@ const getStoredUser = () => {
 };
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(getStoredUser);
+  const [user, setUser] =
+    useState(getStoredUser);
+
   const [token, setToken] = useState(
-    () => localStorage.getItem("token") || null
+    () =>
+      localStorage.getItem("token") ||
+      null
   );
 
-  const login = async (email, password) => {
-    const data = await loginUser(email, password);
-
+  const saveAuth = (data) => {
     setUser(data.user);
     setToken(data.token);
 
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify(data.user)
+    );
+
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+  };
+
+  const login = async (
+    email,
+    password
+  ) => {
+    const data = await loginUser(
+      email,
+      password
+    );
+
+    saveAuth(data);
 
     return data;
   };
 
-  const signup = async (name, email, password) => {
-    const data = await signupUser(name, email, password);
+  const signup = async (
+    name,
+    email,
+    password
+  ) => {
+    const data = await signupUser(
+      name,
+      email,
+      password
+    );
 
-    setUser(data.user);
-    setToken(data.token);
-
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
+    saveAuth(data);
 
     return data;
+  };
+
+  const updateProfile = (updates) => {
+    setUser((currentUser) => {
+      if (!currentUser) {
+        return currentUser;
+      }
+
+      const updatedUser = {
+        ...currentUser,
+        ...updates,
+      };
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(updatedUser)
+      );
+
+      return updatedUser;
+    });
   };
 
   const logout = () => {
@@ -49,6 +105,9 @@ const AuthProvider = ({ children }) => {
 
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem(
+      "deskverseWorkspaceId"
+    );
   };
 
   return (
@@ -58,6 +117,7 @@ const AuthProvider = ({ children }) => {
         token,
         login,
         signup,
+        updateProfile,
         logout,
       }}
     >
@@ -66,4 +126,7 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-export { AuthContext, AuthProvider };
+export {
+  AuthContext,
+  AuthProvider,
+};

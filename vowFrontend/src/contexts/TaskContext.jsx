@@ -3,7 +3,9 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import useWorkspace from "../hooks/UseWorkspace";
+
 import {
   getTasks,
   createTask,
@@ -46,10 +48,8 @@ const TaskProvider = ({ children }) => {
   const { workspace } = useWorkspace();
 
   const [tasks, setTasks] = useState([]);
-  const [loadingTasks, setLoadingTasks] =
-    useState(false);
-  const [taskError, setTaskError] =
-    useState("");
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [taskError, setTaskError] = useState("");
 
   const loadTasks = async () => {
     if (!workspace?.id) {
@@ -61,9 +61,7 @@ const TaskProvider = ({ children }) => {
       setLoadingTasks(true);
       setTaskError("");
 
-      const data = await getTasks(
-        workspace.id
-      );
+      const data = await getTasks(workspace.id);
 
       setTasks(
         Array.isArray(data)
@@ -84,27 +82,20 @@ const TaskProvider = ({ children }) => {
 
   const addTask = async (taskData) => {
     if (!workspace?.id) {
-      throw new Error(
-        "No workspace selected."
-      );
+      throw new Error("No workspace selected.");
     }
 
-    const task = await createTask({
+    const payload = {
       workspaceId: workspace.id,
       title: taskData.title.trim(),
-      description:
-        taskData.description || "",
-      assignedTo:
-        taskData.assignedTo || "",
-      status: toApiStatus(
-        taskData.status || "To Do"
-      ),
-      priority:
-        taskData.priority || "medium",
-    });
+      description: taskData.description || "",
+      assignedTo: taskData.assignedTo || "",
+      status: toApiStatus(taskData.status || "To Do"),
+      priority: taskData.priority || "medium",
+    };
 
-    const normalizedTask =
-      normalizeTask(task);
+    const task = await createTask(payload);
+    const normalizedTask = normalizeTask(task);
 
     setTasks((previous) => [
       ...previous,
@@ -114,58 +105,51 @@ const TaskProvider = ({ children }) => {
     return normalizedTask;
   };
 
-  const updateTaskStatus = async (
-    taskId,
-    status
-  ) => {
-    const updated = await updateTask(
-      taskId,
-      {
-        status: toApiStatus(status),
-      }
-    );
+  const updateTaskStatus = async (taskId, status) => {
+    const updated = await updateTask(taskId, {
+      status: toApiStatus(status),
+    });
+
+    const normalizedTask = normalizeTask(updated);
 
     setTasks((previous) =>
       previous.map((task) =>
         task.id === taskId
           ? {
               ...task,
-              ...normalizeTask(updated),
+              ...normalizedTask,
             }
           : task
       )
     );
+
+    return normalizedTask;
   };
 
-  const updateTaskData = async (
-    taskId,
-    data
-  ) => {
+  const updateTaskData = async (taskId, data) => {
     const payload = {
       ...data,
     };
 
     if (payload.status) {
-      payload.status = toApiStatus(
-        payload.status
-      );
+      payload.status = toApiStatus(payload.status);
     }
 
-    const updated = await updateTask(
-      taskId,
-      payload
-    );
+    const updated = await updateTask(taskId, payload);
+    const normalizedTask = normalizeTask(updated);
 
     setTasks((previous) =>
       previous.map((task) =>
         task.id === taskId
           ? {
               ...task,
-              ...normalizeTask(updated),
+              ...normalizedTask,
             }
           : task
       )
     );
+
+    return normalizedTask;
   };
 
   const removeTask = async (taskId) => {

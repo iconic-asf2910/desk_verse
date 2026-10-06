@@ -3,21 +3,32 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import useAuth from "../hooks/UseAuth";
 import useWorkspace from "../hooks/UseWorkspace";
+
 import {
   getPresence,
   updatePresence,
 } from "../services/api/presenceApi";
 
-const PresenceContext = createContext();
+const PresenceContext =
+  createContext();
 
-const PresenceProvider = ({ children }) => {
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:8080";
+
+const PresenceProvider = ({
+  children,
+}) => {
   const { user } = useAuth();
-  const { workspace } = useWorkspace();
+  const { workspace } =
+    useWorkspace();
 
   const [presence, setPresence] =
     useState(null);
+
   const [presenceError, setPresenceError] =
     useState("");
 
@@ -30,30 +41,39 @@ const PresenceProvider = ({ children }) => {
     try {
       setPresenceError("");
 
-      const data = await getPresence(
-        user.id,
-        workspace?.id
-      );
+      const data =
+        await getPresence(
+          user.id,
+          workspace?.id
+        );
 
       setPresence(data);
     } catch (error) {
-      setPresenceError(error.message);
+      setPresenceError(
+        error.message
+      );
     }
   };
 
   useEffect(() => {
     loadPresence();
-  }, [user?.id, workspace?.id]);
+  }, [
+    user?.id,
+    workspace?.id,
+  ]);
 
-  const setStatus = async (status) => {
+  const setStatus = async (
+    status
+  ) => {
     if (!user?.id) {
-      return;
+      return null;
     }
 
-    const data = await updatePresence(
-      user.id,
-      status
-    );
+    const data =
+      await updatePresence(
+        user.id,
+        status
+      );
 
     setPresence(data);
 
@@ -62,21 +82,25 @@ const PresenceProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user?.id) {
-      return;
+      return undefined;
     }
 
-    setStatus("online").catch(() => {});
+    setStatus("online").catch(
+      () => {}
+    );
 
     const handleUnload = () => {
       const token =
-        localStorage.getItem("token");
+        localStorage.getItem(
+          "token"
+        );
 
       if (!token) {
         return;
       }
 
       fetch(
-        `http://localhost:8080/api/presence/${user.id}/status`,
+        `${API_URL}/api/presence/${user.id}/status`,
         {
           method: "PUT",
           headers: {
@@ -89,7 +113,7 @@ const PresenceProvider = ({ children }) => {
           }),
           keepalive: true,
         }
-      );
+      ).catch(() => {});
     };
 
     window.addEventListener(
@@ -110,7 +134,8 @@ const PresenceProvider = ({ children }) => {
       value={{
         presence,
         status:
-          presence?.status || "offline",
+          presence?.status ||
+          "offline",
         setStatus,
         loadPresence,
         presenceError,

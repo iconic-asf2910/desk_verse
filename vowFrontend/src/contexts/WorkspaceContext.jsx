@@ -1,121 +1,160 @@
-import { createContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+} from "react";
+
 import {
   getWorkspaces,
   createWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
 } from "../services/api/workspaceApi";
-import { createRoom } from "../services/api/roomApi";
 
 const WorkspaceContext = createContext();
 
 const WorkspaceProvider = ({ children }) => {
   const [workspace, setWorkspace] = useState(null);
   const [workspaces, setWorkspaces] = useState([]);
-  const [workspaceError, setWorkspaceError] = useState("");
-  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
-  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const [loadingWorkspaces, setLoadingWorkspaces] =
+    useState(true);
+  const [workspaceError, setWorkspaceError] =
+    useState("");
+
+  const loadWorkspaces = async () => {
+    try {
+      setLoadingWorkspaces(true);
+      setWorkspaceError("");
+
+      const data = await getWorkspaces();
+
+      const list = Array.isArray(data) ? data : [];
+
+      setWorkspaces(list);
+
+      const savedId = localStorage.getItem(
+        "deskverseWorkspaceId"
+      );
+
+      const selected =
+        list.find(
+          (item) =>
+            String(item.id) === String(savedId)
+        ) ||
+        list[0] ||
+        null;
+
+      setWorkspace(selected);
+
+      if (selected) {
+        localStorage.setItem(
+          "deskverseWorkspaceId",
+          selected.id
+        );
+      }
+    } catch (error) {
+      setWorkspaceError(error.message);
+      setWorkspaces([]);
+      setWorkspace(null);
+    } finally {
+      setLoadingWorkspaces(false);
+    }
+  };
 
   useEffect(() => {
-    const loadWorkspaces = async () => {
-      try {
-        setLoadingWorkspaces(true);
-        setWorkspaceError("");
-
-        const data = await getWorkspaces();
-        const workspaceList = Array.isArray(data) ? data : [];
-
-        setWorkspaces(workspaceList);
-
-        const savedWorkspaceId =
-          localStorage.getItem("deskverseWorkspaceId");
-
-        const savedWorkspace = workspaceList.find(
-          (item) =>
-            String(item.id) === String(savedWorkspaceId)
-        );
-
-        const selectedWorkspace =
-          savedWorkspace || workspaceList[0] || null;
-
-        setWorkspace(selectedWorkspace);
-
-        if (selectedWorkspace) {
-          localStorage.setItem(
-            "deskverseWorkspaceId",
-            selectedWorkspace.id
-          );
-        }
-      } catch (error) {
-        setWorkspaceError(error.message);
-        setWorkspaces([]);
-        setWorkspace(null);
-      } finally {
-        setLoadingWorkspaces(false);
-      }
-    };
-
     loadWorkspaces();
   }, []);
 
   const selectWorkspace = (workspaceId) => {
-    const selectedWorkspace = workspaces.find(
+    const selected = workspaces.find(
       (item) =>
         String(item.id) === String(workspaceId)
     );
 
-    if (!selectedWorkspace) {
+    if (!selected) {
       return;
     }
 
-    setWorkspace(selectedWorkspace);
+    setWorkspace(selected);
 
     localStorage.setItem(
       "deskverseWorkspaceId",
-      selectedWorkspace.id
+      selected.id
     );
   };
 
   const addWorkspace = async (workspaceData) => {
-    try {
-      setCreatingWorkspace(true);
-      setWorkspaceError("");
+    const created = await createWorkspace({
+      name: workspaceData.name.trim(),
+      description:
+        workspaceData.description || "",
+    });
 
-      const newWorkspace = await createWorkspace({
-        name: workspaceData.name.trim(),
-        description: workspaceData.description.trim(),
-      });
+    setWorkspaces((previous) => [
+      ...previous,
+      created,
+    ]);
 
-      let workspaceWithRoom = newWorkspace;
+    setWorkspace(created);
 
-      try {
-        await createRoom(newWorkspace.id, {
-          name: "Main Room",
-          description: "Default workspace meeting room",
-          type: "general",
-        });
-      } catch (roomError) {
-        throw new Error(
-          `Workspace was created, but the default room could not be created: ${roomError.message}`
+    localStorage.setItem(
+      "deskverseWorkspaceId",
+      created.id
+    );
+
+    return created;
+  };
+
+  const editWorkspace = async (
+    workspaceId,
+    data
+  ) => {
+    const updated = await updateWorkspace(
+      workspaceId,
+      data
+    );
+
+    setWorkspaces((previous) =>
+      previous.map((item) =>
+        item.id === workspaceId
+          ? updated
+          : item
+      )
+    );
+
+    setWorkspace((current) =>
+      current?.id === workspaceId
+        ? updated
+        : current
+    );
+
+    return updated;
+  };
+
+  const removeWorkspace = async (workspaceId) => {
+    await deleteWorkspace(workspaceId);
+
+    const remaining = workspaces.filter(
+      (item) => item.id !== workspaceId
+    );
+
+    setWorkspaces(remaining);
+
+    if (workspace?.id === workspaceId) {
+      const next = remaining[0] || null;
+
+      setWorkspace(next);
+
+      if (next) {
+        localStorage.setItem(
+          "deskverseWorkspaceId",
+          next.id
+        );
+      } else {
+        localStorage.removeItem(
+          "deskverseWorkspaceId"
         );
       }
-
-      setWorkspaces((previousWorkspaces) => [
-        ...previousWorkspaces,
-        workspaceWithRoom,
-      ]);
-
-      setWorkspace(workspaceWithRoom);
-
-      localStorage.setItem(
-        "deskverseWorkspaceId",
-        workspaceWithRoom.id
-      );
-
-      return workspaceWithRoom;
-    } catch (error) {
-      setWorkspaceError(error.message);
-      throw error;
-    } finally {
-      setCreatingWorkspace(false);
     }
   };
 
@@ -128,9 +167,11 @@ const WorkspaceProvider = ({ children }) => {
         setWorkspaces,
         selectWorkspace,
         addWorkspace,
-        workspaceError,
+        updateWorkspace: editWorkspace,
+        deleteWorkspace: removeWorkspace,
+        loadWorkspaces,
         loadingWorkspaces,
-        creatingWorkspace,
+        workspaceError,
       }}
     >
       {children}

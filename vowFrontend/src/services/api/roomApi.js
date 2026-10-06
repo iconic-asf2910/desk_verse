@@ -28,10 +28,4 @@ const deleteRoom = async (roomId) => {
   });
 };
 
-export {
-  getRooms,
-  getRoom,
-  createRoom,
-  updateRoom,
-  deleteRoom,
-};
+export { getRooms, getRoom, createRoom, updateRoom, deleteRoom };

@@ -4,12 +4,19 @@ const getTasks = async (
   workspaceId,
   assignedTo = ""
 ) => {
-  const params = new URLSearchParams();
+  const params =
+    new URLSearchParams();
 
-  params.set("workspaceId", workspaceId);
+  params.set(
+    "workspaceId",
+    workspaceId
+  );
 
   if (assignedTo) {
-    params.set("assignedTo", assignedTo);
+    params.set(
+      "assignedTo",
+      assignedTo
+    );
   }
 
   return await apiRequest(
@@ -17,15 +24,26 @@ const getTasks = async (
   );
 };
 
-const getTask = async (taskId) => {
-  return await apiRequest(`/api/tasks/${taskId}`);
+const getTask = async (
+  taskId
+) => {
+  return await apiRequest(
+    `/api/tasks/${taskId}`
+  );
 };
 
-const createTask = async (taskData) => {
-  return await apiRequest("/api/tasks", {
-    method: "POST",
-    body: JSON.stringify(taskData),
-  });
+const createTask = async (
+  taskData
+) => {
+  return await apiRequest(
+    "/api/tasks",
+    {
+      method: "POST",
+      body: JSON.stringify(
+        taskData
+      ),
+    }
+  );
 };
 
 const updateTask = async (
@@ -36,12 +54,16 @@ const updateTask = async (
     `/api/tasks/${taskId}`,
     {
       method: "PUT",
-      body: JSON.stringify(taskData),
+      body: JSON.stringify(
+        taskData
+      ),
     }
   );
 };
 
-const deleteTask = async (taskId) => {
+const deleteTask = async (
+  taskId
+) => {
   return await apiRequest(
     `/api/tasks/${taskId}`,
     {

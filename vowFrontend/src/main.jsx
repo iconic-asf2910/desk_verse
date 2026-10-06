@@ -1,17 +1,19 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+
 import "./index.css";
 import App from "./App.jsx";
-import { BrowserRouter } from "react-router-dom";
+
 import { AuthProvider } from "./contexts/AuthContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { RoomProvider } from "./contexts/RoomContext";
 import { TaskProvider } from "./contexts/TaskContext";
-import { PollProvider } from "./contexts/PollContext.jsx";
-import { NotificationProvider } from "./contexts/NotificationContext.jsx";
-import { ActivityProvider } from "./contexts/ActivityContext.jsx";
-import { ChatProvider } from "./contexts/ChatContext.jsx";
-import { PresenceProvider } from "./contexts/PresenceContext.jsx";
+import { PollProvider } from "./contexts/PollContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { ActivityProvider } from "./contexts/ActivityContext";
+import { ChatProvider } from "./contexts/ChatContext";
+import { PresenceProvider } from "./contexts/PresenceContext";
 
 createRoot(
   document.getElementById("root")
