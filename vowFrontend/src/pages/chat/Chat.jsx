@@ -1,339 +1,373 @@
-import { useMemo, useRef, useState } from "react";
-import { Paperclip, Search, Send } from "lucide-react";
-
-const initialChats = [
-  {
-    id: 1,
-    name: "Design Team Standup",
-    members: 4,
-    online: 4,
-    avatar: "/boy1.png",
-    lastMessage: "Sarah: Ok, the mockups are ready...",
-    time: "10:30 AM",
-    messages: [
-      {
-        id: 1,
-        sender: "Sarah",
-        avatar: "/boy1.png",
-        text: "Hi Team, let's sync on the new workspace layout.",
-        time: "10:25 AM",
-      },
-      {
-        id: 2,
-        sender: "Mike",
-        avatar: "/boy2.png",
-        text: "Sure, I'll pull up the floor plan.",
-        time: "10:26 AM",
-      },
-      {
-        id: 3,
-        sender: "Alex",
-        avatar: "/boy3.png",
-        text: "I have got the analytics ready for review.",
-        time: "10:28 AM",
-      },
-      {
-        id: 4,
-        sender: "Sarah",
-        avatar: "/boy1.png",
-        text: "Okay, the mockups are ready for Q4. Let's schedule a quick huddle.",
-        time: "10:30 AM",
-      },
-      {
-        id: 5,
-        sender: "David",
-        avatar: "/boy4.png",
-        text: "Okay, Let's do it.",
-        time: "10:32 AM",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Mike Rose",
-    members: 1,
-    online: 1,
-    avatar: "/boy2.png",
-    lastMessage: "Mike: Thanks for your feedback!",
-    time: "10:15 AM",
-    messages: [
-      {
-        id: 1,
-        sender: "Mike",
-        avatar: "/boy2.png",
-        text: "Thanks for your feedback!",
-        time: "10:15 AM",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Engineering Hub",
-    members: 1,
-    online: 1,
-    avatar: "/boy4.png",
-    lastMessage: "David: New build deployed.",
-    time: "Yesterday",
-    messages: [
-      {
-        id: 1,
-        sender: "David",
-        avatar: "/boy4.png",
-        text: "New build deployed.",
-        time: "Yesterday",
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Chloe Wang",
-    members: 1,
-    online: 1,
-    avatar: "/boy5.png",
-    lastMessage: "Chloe: See you in the Lounge.",
-    time: "Yesterday",
-    messages: [
-      {
-        id: 1,
-        sender: "Chloe",
-        avatar: "/boy5.png",
-        text: "See you in the Lounge.",
-        time: "Yesterday",
-      },
-    ],
-  },
-];
+import { useState } from "react";
+import {
+  MessageCircle,
+  Plus,
+  Search,
+  Send,
+  Paperclip,
+  Smile,
+  MoreVertical,
+} from "lucide-react";
+import useAuth from "../../hooks/UseAuth";
+import useChat from "../../hooks/UseChat";
 
 const Chat = () => {
-  const [chats, setChats] = useState(initialChats);
-  const [activeChatId, setActiveChatId] = useState(1);
-  const [search, setSearch] = useState("");
+  const { user } = useAuth();
+
+  const {
+    rooms,
+    activeRoom,
+    activeRoomId,
+    setActiveRoomId,
+    sendMessage,
+    createChatRoom,
+  } = useChat();
+
   const [message, setMessage] = useState("");
+  const [search, setSearch] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
 
-  const fileInputRef = useRef(null);
+  const filteredRooms = rooms.filter((room) =>
+    room.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const activeChat = chats.find((chat) => chat.id === activeChatId);
+  const handleSend = (event) => {
+    event.preventDefault();
 
-  const filteredChats = useMemo(() => {
-    return chats.filter((chat) =>
-      chat.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [chats, search]);
+    if (!message.trim() || !activeRoom) {
+      return;
+    }
 
-  const sendMessage = () => {
-    const text = message.trim();
-
-    if (!text || !activeChat) return;
-
-    const newMessage = {
-      id: Date.now(),
-      sender: "You",
-      avatar: "/manprofile.png",
-      text,
-      time: new Date().toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-      }),
-    };
-
-    setChats((previousChats) =>
-      previousChats.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, newMessage],
-              lastMessage: `You: ${text}`,
-              time: newMessage.time,
-            }
-          : chat
-      )
-    );
+    sendMessage({
+      roomId: activeRoom.id,
+      sender: user?.name || "You",
+      message,
+    });
 
     setMessage("");
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
+  const handleCreateRoom = (event) => {
+    event.preventDefault();
+
+    if (!roomName.trim()) {
+      return;
     }
+
+    createChatRoom(roomName);
+    setRoomName("");
+    setShowCreateRoom(false);
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    setMessage((previous) =>
-      previous
-        ? `${previous} [${file.name}]`
-        : `[${file.name}]`
-    );
-
-    event.target.value = "";
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-[520px] overflow-hidden bg-white">
-      <aside className="flex w-[37%] min-w-[280px] max-w-[430px] flex-col border-r border-slate-300 bg-slate-50">
-        <div className="mx-3 mt-3 flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-slate-500">
-          <Search size={16} />
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f3f4f6] p-4">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] max-w-6xl overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
+        <aside className="flex w-[280px] shrink-0 flex-col border-r border-slate-300 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">
+                Chat
+              </h1>
 
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search"
-            className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {filteredChats.length === 0 ? (
-            <div className="px-4 py-8 text-center text-xs text-slate-500">
-              No conversations found.
+              <p className="mt-0.5 text-xs text-slate-400">
+                Workspace conversations
+              </p>
             </div>
-          ) : (
-            filteredChats.map((chat) => (
-              <button
-                key={chat.id}
-                type="button"
-                onClick={() => setActiveChatId(chat.id)}
-                className={`flex min-h-[76px] w-full items-center gap-2.5 border-b border-slate-200 px-3 py-2.5 text-left transition ${
-                  chat.id === activeChatId
-                    ? "bg-gradient-to-r from-indigo-50 to-white"
-                    : "bg-transparent hover:bg-slate-100"
-                }`}
-              >
-                <img
-                  src={chat.avatar}
-                  alt={chat.name}
-                  className="h-8 w-8 shrink-0 rounded-full object-cover"
-                />
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs font-semibold text-slate-800">
-                      {chat.name}
-                    </span>
+            <button
+              type="button"
+              onClick={() => setShowCreateRoom(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-purple-600"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
 
-                    <time className="shrink-0 text-[10px] text-slate-500">
-                      {chat.time}
-                    </time>
-                  </div>
-
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <span className="truncate text-[11px] text-slate-500">
-                      {chat.lastMessage}
-                    </span>
-
-                    {chat.members > 1 && (
-                      <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[9px] text-indigo-600">
-                        {chat.members}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      </aside>
-
-      <section className="flex min-w-0 flex-1 flex-col bg-white">
-        {activeChat && (
-          <>
-            <header className="flex h-[62px] items-center gap-2.5 border-b border-slate-300 bg-white px-4">
-              <img
-                src={activeChat.avatar}
-                alt={activeChat.name}
-                className="h-[34px] w-[34px] rounded-full object-cover"
+          <div className="border-b border-slate-200 px-3 py-3">
+            <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2">
+              <Search
+                size={15}
+                className="text-slate-400"
               />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Search"
+                className="w-full bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {filteredRooms.map((room, index) => {
+              const lastMessage =
+                room.messages[room.messages.length - 1];
+
+              const active =
+                activeRoomId === room.id;
+
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  onClick={() =>
+                    setActiveRoomId(room.id)
+                  }
+                  className={`flex w-full items-center gap-3 border-b border-slate-200 px-3 py-3 text-left transition ${
+                    active
+                      ? "bg-purple-50"
+                      : "hover:bg-slate-50"
+                  }`}
+                >
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                      active
+                        ? "bg-purple-200 text-purple-700"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    <MessageCircle size={19} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {index + 1}. {room.name}
+                      </p>
+
+                      {lastMessage && (
+                        <span className="shrink-0 text-[10px] text-slate-400">
+                          {formatTime(
+                            lastMessage.createdAt
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-1 truncate text-xs text-slate-400">
+                      {lastMessage
+                        ? `${lastMessage.sender}: ${lastMessage.message}`
+                        : "No messages yet"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        <section className="flex min-w-0 flex-1 flex-col bg-white">
+          <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-slate-300 px-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-700">
+                <MessageCircle size={20} />
+              </div>
 
               <div>
-                <h1 className="text-sm font-semibold text-slate-800">
-                  {activeChat.name}
-                </h1>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {activeRoom?.name || "Chat"}
+                </h2>
 
-                <p className="mt-0.5 text-[10px] text-slate-500">
-                  {activeChat.online}{" "}
-                  {activeChat.online === 1 ? "member" : "members"} online
+                <p className="text-xs text-slate-400">
+                  {activeRoom
+                    ? `${activeRoom.messages.length} messages`
+                    : "Workspace conversation"}
                 </p>
               </div>
-            </header>
-
-            <div className="flex-1 overflow-y-auto bg-white px-4 py-4">
-              {activeChat.messages.map((item) => (
-                <div
-                  key={item.id}
-                  className="mb-3 flex items-start gap-2"
-                >
-                  <img
-                    src={item.avatar}
-                    alt={item.sender}
-                    className="h-[27px] w-[27px] shrink-0 rounded-full object-cover"
-                  />
-
-                  <div className="max-w-[75%]">
-                    <div className="mb-1 flex items-center gap-2">
-                      <strong className="text-[11px] font-semibold text-slate-700">
-                        {item.sender}
-                      </strong>
-
-                      <time className="text-[9px] text-slate-400">
-                        {item.time}
-                      </time>
-                    </div>
-
-                    <div className="w-fit max-w-full rounded-md border border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-100 px-2.5 py-1.5 text-[11px] leading-[1.35] text-slate-700 shadow-sm">
-                      {item.text}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
 
-            <div className="relative border-t border-slate-300 bg-white px-3 py-2">
-              <textarea
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+            >
+              <MoreVertical size={18} />
+            </button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto bg-[#fafafa] px-5 py-5">
+            {!activeRoom ||
+            activeRoom.messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                  <MessageCircle size={25} />
+                </div>
+
+                <h3 className="mt-4 text-sm font-semibold text-slate-700">
+                  No messages yet
+                </h3>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Start the conversation.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {activeRoom.messages.map((item) => {
+                  const ownMessage =
+                    item.sender ===
+                    (user?.name || "You");
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-start gap-3 ${
+                        ownMessage
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      {!ownMessage && (
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+                          {item.sender
+                            ?.charAt(0)
+                            ?.toUpperCase() || "U"}
+                        </div>
+                      )}
+
+                      <div
+                        className={`max-w-[65%] ${
+                          ownMessage
+                            ? "items-end"
+                            : "items-start"
+                        }`}
+                      >
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="text-xs font-semibold text-slate-700">
+                            {item.sender}
+                          </span>
+
+                          <span className="text-[10px] text-slate-400">
+                            {formatTime(
+                              item.createdAt
+                            )}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`rounded-xl px-4 py-2.5 text-sm ${
+                            ownMessage
+                              ? "bg-purple-600 text-white"
+                              : "border border-slate-200 bg-white text-slate-700 shadow-sm"
+                          }`}
+                        >
+                          {item.message}
+                        </div>
+                      </div>
+
+                      {ownMessage && (
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700">
+                          {item.sender
+                            ?.charAt(0)
+                            ?.toUpperCase() || "U"}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <form
+            onSubmit={handleSend}
+            className="border-t border-slate-300 bg-white px-4 py-3"
+          >
+            <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5">
+              <input
+                type="text"
                 value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={(event) =>
+                  setMessage(event.target.value)
+                }
                 placeholder="Type a message..."
-                rows="1"
-                className="min-h-7 w-full resize-none border-none bg-transparent px-1 py-1 pr-20 text-[11px] leading-[18px] text-slate-700 outline-none placeholder:text-slate-400"
+                className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
 
-              <div className="absolute bottom-2 right-2 flex items-center gap-1">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <Smile size={17} />
+              </button>
+
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <Paperclip size={17} />
+              </button>
+
+              <button
+                type="submit"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-purple-600 hover:bg-purple-50"
+              >
+                <Send size={17} />
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      {showCreateRoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Create Chat
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Create a new conversation.
+            </p>
+
+            <form
+              onSubmit={handleCreateRoom}
+              className="mt-5"
+            >
+              <input
+                type="text"
+                value={roomName}
+                onChange={(event) =>
+                  setRoomName(event.target.value)
+                }
+                placeholder="Chat name"
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-purple-500"
+              />
+
+              <div className="mt-5 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Attach file"
-                  className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  onClick={() => {
+                    setShowCreateRoom(false);
+                    setRoomName("");
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  <Paperclip size={17} />
+                  Cancel
                 </button>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  hidden
-                  onChange={handleFileChange}
-                />
-
                 <button
-                  type="button"
-                  onClick={sendMessage}
-                  disabled={!message.trim()}
-                  title="Send"
-                  className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-default disabled:opacity-40"
+                  type="submit"
+                  className="rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-purple-700"
                 >
-                  <Send size={16} />
+                  Create
                 </button>
               </div>
-            </div>
-          </>
-        )}
-      </section>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useWorkspace from "../../hooks/UseWorkspace";
+import { getRooms } from "../../services/api/roomApi";
 import { createMeeting } from "../../services/api/meetingApi";
 
 const CreateMeeting = () => {
@@ -8,14 +9,53 @@ const CreateMeeting = () => {
 
   const { workspace } = useWorkspace();
 
+  const [rooms, setRooms] = useState([]);
+  const [roomId, setRoomId] = useState("");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [participantInput, setParticipantInput] = useState("");
   const [participants, setParticipants] = useState([]);
-  const [error, setError] = useState("");
+
+  const [loadingRooms, setLoadingRooms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadRooms = async () => {
+      if (!workspace?.id) {
+        setRooms([]);
+        setRoomId("");
+        return;
+      }
+
+      try {
+        setLoadingRooms(true);
+        setError("");
+
+        const data = await getRooms(workspace.id);
+        const roomList = Array.isArray(data) ? data : [];
+
+        setRooms(roomList);
+
+        if (roomList.length > 0) {
+          setRoomId(roomList[0].id);
+        } else {
+          setRoomId("");
+        }
+      } catch (error) {
+        setError(error.message);
+        setRooms([]);
+        setRoomId("");
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+
+    loadRooms();
+  }, [workspace]);
 
   const addParticipant = () => {
     const participant = participantInput.trim();
@@ -39,7 +79,9 @@ const CreateMeeting = () => {
 
   const removeParticipant = (participant) => {
     setParticipants((previousParticipants) =>
-      previousParticipants.filter((item) => item !== participant)
+      previousParticipants.filter(
+        (item) => item !== participant
+      )
     );
   };
 
@@ -53,6 +95,21 @@ const CreateMeeting = () => {
       return;
     }
 
+    if (!roomId) {
+      setError("Please select a room.");
+      return;
+    }
+
+    if (!title.trim()) {
+      setError("Meeting title is required.");
+      return;
+    }
+
+    if (!startTime || !endTime) {
+      setError("Start and end time are required.");
+      return;
+    }
+
     if (new Date(endTime) <= new Date(startTime)) {
       setError("End time must be after start time.");
       return;
@@ -63,7 +120,7 @@ const CreateMeeting = () => {
 
       const meetingData = {
         workspaceId: workspace.id,
-        roomId: "",
+        roomId,
         title: title.trim(),
         description: description.trim(),
         participants,
@@ -113,7 +170,10 @@ const CreateMeeting = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Meeting Title
@@ -143,9 +203,46 @@ const CreateMeeting = () => {
                 }
                 placeholder="Enter meeting description"
                 rows="4"
-                required
                 className="w-full resize-none rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Room
+              </label>
+
+              {loadingRooms ? (
+                <div className="rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-500">
+                  Loading rooms...
+                </div>
+              ) : rooms.length === 0 ? (
+                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  No rooms are available in this workspace.
+                </div>
+              ) : (
+                <select
+                  value={roomId}
+                  onChange={(event) =>
+                    setRoomId(event.target.value)
+                  }
+                  required
+                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">
+                    Select a room
+                  </option>
+
+                  {rooms.map((room) => (
+                    <option
+                      key={room.id}
+                      value={room.id}
+                    >
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -250,10 +347,17 @@ const CreateMeeting = () => {
 
               <button
                 type="submit"
-                disabled={loading || !workspace}
+                disabled={
+                  loading ||
+                  loadingRooms ||
+                  !workspace ||
+                  !roomId
+                }
                 className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? "Creating..." : "Create Meeting"}
+                {loading
+                  ? "Creating..."
+                  : "Create Meeting"}
               </button>
             </div>
           </form>
