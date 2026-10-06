@@ -9,10 +9,11 @@ import (
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
 	"github.com/iconic-asf2910/vow/internal/meeting"
+	"github.com/iconic-asf2910/vow/internal/message"
 	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/room"
-	"github.com/iconic-asf2910/vow/internal/message"
 	"github.com/iconic-asf2910/vow/internal/signaling"
+	"github.com/iconic-asf2910/vow/internal/task"
 	"github.com/iconic-asf2910/vow/internal/transcript"
 	"github.com/iconic-asf2910/vow/internal/workspace"
 	"github.com/joho/godotenv"
@@ -73,6 +74,8 @@ func main() {
 	http.HandleFunc("/api/meetings", middleware.RequireAuth(meeting.HandleMeetings))
 	http.HandleFunc("/api/messages/", middleware.RequireAuth(message.HandleMessageByID))
 	http.HandleFunc("/api/messages", middleware.RequireAuth(message.HandleMessages))
+	http.HandleFunc("/api/tasks/", middleware.RequireAuth(task.HandleTaskByID))
+	http.HandleFunc("/api/tasks", middleware.RequireAuth(task.HandleTasks))
 	http.HandleFunc("/api/meetings/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.Contains(path, "/ws") {
