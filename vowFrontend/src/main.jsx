@@ -7,16 +7,18 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { RoomProvider } from "./contexts/RoomContext";
 import { TaskProvider } from "./contexts/TaskContext";
-
+import { PollProvider } from "./contexts/PollContext.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <WorkspaceProvider>
           <RoomProvider>
-            <TaskProvider>
-              <App />
-            </TaskProvider>
+          <TaskProvider>
+  <PollProvider>
+    <App />
+  </PollProvider>
+</TaskProvider>
           </RoomProvider>
         </WorkspaceProvider>
       </AuthProvider>

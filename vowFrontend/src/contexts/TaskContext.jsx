@@ -5,7 +5,7 @@ const TaskContext = createContext();
 const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState(() => {
     try {
-      const savedTasks = localStorage.getItem("vow_tasks");
+      const savedTasks = localStorage.getItem("DeskVerse_tasks");
 
       if (!savedTasks) {
         return [];
@@ -13,19 +13,14 @@ const TaskProvider = ({ children }) => {
 
       const parsedTasks = JSON.parse(savedTasks);
 
-      return Array.isArray(parsedTasks)
-        ? parsedTasks
-        : [];
+      return Array.isArray(parsedTasks) ? parsedTasks : [];
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    localStorage.setItem(
-      "vow_tasks",
-      JSON.stringify(tasks)
-    );
+    localStorage.setItem("DeskVerse_tasks", JSON.stringify(tasks));
   }, [tasks]);
 
   const addTask = (taskData) => {
@@ -38,10 +33,7 @@ const TaskProvider = ({ children }) => {
       createdAt: new Date().toISOString(),
     };
 
-    setTasks((previousTasks) => [
-      ...previousTasks,
-      newTask,
-    ]);
+    setTasks((previousTasks) => [...previousTasks, newTask]);
 
     return newTask;
   };
@@ -54,8 +46,8 @@ const TaskProvider = ({ children }) => {
               ...task,
               status,
             }
-          : task
-      )
+          : task,
+      ),
     );
   };
 
@@ -67,16 +59,14 @@ const TaskProvider = ({ children }) => {
               ...task,
               ...updates,
             }
-          : task
-      )
+          : task,
+      ),
     );
   };
 
   const deleteTask = (taskId) => {
     setTasks((previousTasks) =>
-      previousTasks.filter(
-        (task) => task.id !== taskId
-      )
+      previousTasks.filter((task) => task.id !== taskId),
     );
   };
 
