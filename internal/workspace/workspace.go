@@ -200,7 +200,7 @@ func ListWorkspaces(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cursor.Close(ctx)
 
-	var workspaces []models.Workspace
+	workspaces := make([]models.Workspace, 0)
 	if err := cursor.All(ctx, &workspaces); err != nil {
 		http.Error(w, "Failed to read workspaces", http.StatusInternalServerError)
 		return
