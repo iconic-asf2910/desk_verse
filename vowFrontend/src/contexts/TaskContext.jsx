@@ -4,41 +4,84 @@ const TaskContext = createContext();
 
 const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState(() => {
-    const storedTasks = localStorage.getItem("deskverseTasks");
-    return storedTasks ? JSON.parse(storedTasks) : [];
+    try {
+      const savedTasks = localStorage.getItem("vow_tasks");
+
+      if (!savedTasks) {
+        return [];
+      }
+
+      const parsedTasks = JSON.parse(savedTasks);
+
+      return Array.isArray(parsedTasks)
+        ? parsedTasks
+        : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem("deskverseTasks", JSON.stringify(tasks));
+    localStorage.setItem(
+      "vow_tasks",
+      JSON.stringify(tasks)
+    );
   }, [tasks]);
 
-  const addTask = (title) => {
+  const addTask = (taskData) => {
     const newTask = {
-      id: Date.now(),
-      title: title.trim(),
-      completed: false,
+      id: crypto.randomUUID(),
+      title: taskData.title.trim(),
+      assignee: taskData.assignee,
+      dueDate: taskData.dueDate,
+      status: "To Do",
+      createdAt: new Date().toISOString(),
     };
 
     setTasks((previousTasks) => [
       ...previousTasks,
       newTask,
     ]);
+
+    return newTask;
   };
 
-  const toggleTask = (taskId) => {
+  const updateTaskStatus = (taskId, status) => {
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
         task.id === taskId
-          ? { ...task, completed: !task.completed }
+          ? {
+              ...task,
+              status,
+            }
           : task
       )
     );
   };
 
-  const removeTask = (taskId) => {
+  const updateTask = (taskId, updates) => {
     setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== taskId)
+      previousTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              ...updates,
+            }
+          : task
+      )
     );
+  };
+
+  const deleteTask = (taskId) => {
+    setTasks((previousTasks) =>
+      previousTasks.filter(
+        (task) => task.id !== taskId
+      )
+    );
+  };
+
+  const clearTasks = () => {
+    setTasks([]);
   };
 
   return (
@@ -46,8 +89,10 @@ const TaskProvider = ({ children }) => {
       value={{
         tasks,
         addTask,
-        toggleTask,
-        removeTask,
+        updateTaskStatus,
+        updateTask,
+        deleteTask,
+        clearTasks,
       }}
     >
       {children}
