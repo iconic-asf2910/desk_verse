@@ -4,44 +4,31 @@ let connectionListeners = [];
 
 const connectSocket = (url, token) => {
   return new Promise((resolve, reject) => {
-    if (socket?.readyState === WebSocket.OPEN) {
+    if (
+      socket?.readyState === WebSocket.OPEN
+    ) {
       resolve(socket);
       return;
     }
 
-    if (socket?.readyState === WebSocket.CONNECTING) {
-      const checkConnection = () => {
-        if (socket?.readyState === WebSocket.OPEN) {
-          resolve(socket);
-          return;
-        }
-
-        if (
-          !socket ||
-          socket.readyState === WebSocket.CLOSED
-        ) {
-          reject(new Error("WebSocket connection failed."));
-          return;
-        }
-
-        setTimeout(checkConnection, 50);
-      };
-
-      checkConnection();
-      return;
-    }
-
-    const separator = url.includes("?") ? "&" : "?";
+    const separator = url.includes("?")
+      ? "&"
+      : "?";
 
     const ws = new WebSocket(
-      `${url}${separator}token=${encodeURIComponent(token)}`
+      `${url}${separator}token=${encodeURIComponent(
+        token
+      )}`
     );
 
     socket = ws;
 
     ws.onopen = () => {
-      connectionListeners.forEach((listener) =>
-        listener({ type: "connected" })
+      connectionListeners.forEach(
+        (listener) =>
+          listener({
+            type: "connected",
+          })
       );
 
       resolve(ws);
@@ -49,35 +36,43 @@ const connectSocket = (url, token) => {
 
     ws.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data);
+        const message = JSON.parse(
+          event.data
+        );
 
-        messageListeners.forEach((listener) => {
-          listener(message);
-        });
+        messageListeners.forEach(
+          (listener) =>
+            listener(message)
+        );
       } catch {
-        messageListeners.forEach((listener) => {
-          listener({
-            type: "message",
-            data: event.data,
-          });
-        });
+        messageListeners.forEach(
+          (listener) =>
+            listener({
+              type: "message",
+              data: event.data,
+            })
+        );
       }
     };
 
     ws.onerror = (error) => {
-      connectionListeners.forEach((listener) =>
-        listener({
-          type: "error",
-          error,
-        })
+      connectionListeners.forEach(
+        (listener) =>
+          listener({
+            type: "error",
+            error,
+          })
       );
 
       reject(error);
     };
 
     ws.onclose = () => {
-      connectionListeners.forEach((listener) =>
-        listener({ type: "disconnected" })
+      connectionListeners.forEach(
+        (listener) =>
+          listener({
+            type: "disconnected",
+          })
       );
 
       if (socket === ws) {
@@ -87,12 +82,13 @@ const connectSocket = (url, token) => {
   });
 };
 
-const getSocket = () => {
-  return socket;
-};
+const getSocket = () => socket;
 
 const sendMessage = (message) => {
-  if (!socket || socket.readyState !== WebSocket.OPEN) {
+  if (
+    !socket ||
+    socket.readyState !== WebSocket.OPEN
+  ) {
     return false;
   }
 
@@ -105,19 +101,23 @@ const subscribeToMessages = (listener) => {
   messageListeners.push(listener);
 
   return () => {
-    messageListeners = messageListeners.filter(
-      (item) => item !== listener
-    );
+    messageListeners =
+      messageListeners.filter(
+        (item) => item !== listener
+      );
   };
 };
 
-const subscribeToConnection = (listener) => {
+const subscribeToConnection = (
+  listener
+) => {
   connectionListeners.push(listener);
 
   return () => {
-    connectionListeners = connectionListeners.filter(
-      (item) => item !== listener
-    );
+    connectionListeners =
+      connectionListeners.filter(
+        (item) => item !== listener
+      );
   };
 };
 

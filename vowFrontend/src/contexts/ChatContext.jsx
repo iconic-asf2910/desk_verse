@@ -1,79 +1,140 @@
-import { createContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+} from "react";
+import useWorkspace from "../hooks/UseWorkspace";
+import useRoom from "../hooks/UseRoom";
+import useAuth from "../hooks/UseAuth";
+import {
+  getMessages,
+  createMessage,
+} from "../services/api/messageApi";
 
 const ChatContext = createContext();
 
 const ChatProvider = ({ children }) => {
-  const [rooms, setRooms] = useState(() => {
-    const saved = localStorage.getItem("DeskVerse_chat_rooms");
+  const { workspace } = useWorkspace();
+  const { rooms } = useRoom();
+  const { user } = useAuth();
 
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "general",
-            name: "General",
-            messages: [],
-          },
-        ];
-  });
-
-  const [activeRoomId, setActiveRoomId] = useState("general");
+  const [messages, setMessages] = useState([]);
+  const [activeRoomId, setActiveRoomId] =
+    useState(null);
+  const [loadingMessages, setLoadingMessages] =
+    useState(false);
+  const [chatError, setChatError] =
+    useState("");
 
   useEffect(() => {
-    localStorage.setItem("DeskVerse_chat_rooms", JSON.stringify(rooms));
+    if (rooms.length === 0) {
+      setActiveRoomId(null);
+      return;
+    }
+
+    setActiveRoomId((current) => {
+      const exists = rooms.some(
+        (room) => room.id === current
+      );
+
+      return exists ? current : rooms[0].id;
+    });
   }, [rooms]);
 
-  const sendMessage = ({ roomId, sender, message }) => {
+  const loadMessages = async () => {
+    if (!workspace?.id) {
+      setMessages([]);
+      return;
+    }
+
+    try {
+      setLoadingMessages(true);
+      setChatError("");
+
+      const data = await getMessages(
+        workspace.id,
+        activeRoomId
+      );
+
+      setMessages(
+        Array.isArray(data) ? data : []
+      );
+    } catch (error) {
+      setChatError(error.message);
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+  }, [
+    workspace?.id,
+    activeRoomId,
+  ]);
+
+  const sendMessage = async ({
+    roomId,
+    message,
+  }) => {
+    if (!workspace?.id) {
+      throw new Error(
+        "No workspace selected."
+      );
+    }
+
     if (!message.trim()) {
       return;
     }
 
-    const newMessage = {
-      id: crypto.randomUUID(),
-      sender,
-      message: message.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setRooms((previousRooms) =>
-      previousRooms.map((room) =>
-        room.id === roomId
-          ? {
-              ...room,
-              messages: [...room.messages, newMessage],
-            }
-          : room,
-      ),
+    const created = await createMessage(
+      workspace.id,
+      roomId,
+      message.trim()
     );
+
+    setMessages((previous) => [
+      ...previous,
+      created,
+    ]);
+
+    return created;
   };
 
-  const createChatRoom = (name) => {
-    if (!name.trim()) {
-      return;
-    }
+  const activeRoom =
+    rooms.find(
+      (room) => room.id === activeRoomId
+    ) || null;
 
-    const room = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      messages: [],
-    };
+  const activeRoomMessages =
+    messages.filter(
+      (message) =>
+        !activeRoomId ||
+        message.roomId === activeRoomId
+    );
 
-    setRooms((previousRooms) => [...previousRooms, room]);
-
-    setActiveRoomId(room.id);
-  };
-
-  const activeRoom = rooms.find((room) => room.id === activeRoomId) || rooms[0];
+  const chatRooms = rooms.map((room) => ({
+    ...room,
+    messages: messages.filter(
+      (message) =>
+        message.roomId === room.id
+    ),
+  }));
 
   return (
     <ChatContext.Provider
       value={{
-        rooms,
+        rooms: chatRooms,
         activeRoom,
         activeRoomId,
         setActiveRoomId,
+        messages: activeRoomMessages,
         sendMessage,
-        createChatRoom,
+        loadMessages,
+        loadingMessages,
+        chatError,
+        user,
       }}
     >
       {children}
@@ -81,4 +142,7 @@ const ChatProvider = ({ children }) => {
   );
 };
 
-export { ChatContext, ChatProvider };
+export {
+  ChatContext,
+  ChatProvider,
+};

@@ -7,7 +7,10 @@ import {
   PhoneOff,
   MonitorUp,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { getMeeting } from "../../services/api/meetingApi";
 import useAuth from "../../hooks/UseAuth";
 import {
@@ -25,26 +28,29 @@ const JoinMeeting = () => {
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
-  const peerConnectionsRef = useRef({});
+  const peersRef = useRef({});
   const remoteVideoRefs = useRef({});
-  const unsubscribeMessagesRef = useRef(null);
+  const unsubscribeRef = useRef(null);
   const joinedRef = useRef(false);
 
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
-  const [error, setError] = useState("");
   const [joined, setJoined] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [cameraEnabled, setCameraEnabled] = useState(true);
-  const [screenSharing, setScreenSharing] = useState(false);
-  const [remoteStreams, setRemoteStreams] = useState({});
+  const [error, setError] = useState("");
+  const [micEnabled, setMicEnabled] =
+    useState(true);
+  const [cameraEnabled, setCameraEnabled] =
+    useState(true);
+  const [screenSharing, setScreenSharing] =
+    useState(false);
+  const [remoteStreams, setRemoteStreams] =
+    useState({});
 
   useEffect(() => {
     const loadMeeting = async () => {
       try {
         setLoading(true);
-        setError("");
 
         const data = await getMeeting(id);
 
@@ -59,40 +65,37 @@ const JoinMeeting = () => {
     loadMeeting();
   }, [id]);
 
-  useEffect(() => {
-    return () => {
-      cleanupMeeting();
-    };
-  }, []);
-
-  const createPeerConnection = (remoteUserId) => {
-    if (peerConnectionsRef.current[remoteUserId]) {
-      return peerConnectionsRef.current[remoteUserId];
+  const createPeer = (remoteUserId) => {
+    if (peersRef.current[remoteUserId]) {
+      return peersRef.current[
+        remoteUserId
+      ];
     }
 
-    const peerConnection = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302",
-        },
-      ],
-    });
+    const peer =
+      new RTCPeerConnection({
+        iceServers: [
+          {
+            urls:
+              "stun:stun.l.google.com:19302",
+          },
+        ],
+      });
 
-    peerConnectionsRef.current[remoteUserId] =
-      peerConnection;
+    peersRef.current[remoteUserId] = peer;
 
     if (localStreamRef.current) {
       localStreamRef.current
         .getTracks()
         .forEach((track) => {
-          peerConnection.addTrack(
+          peer.addTrack(
             track,
             localStreamRef.current
           );
         });
     }
 
-    peerConnection.onicecandidate = (event) => {
+    peer.onicecandidate = (event) => {
       if (!event.candidate) {
         return;
       }
@@ -105,55 +108,63 @@ const JoinMeeting = () => {
       });
     };
 
-    peerConnection.ontrack = (event) => {
+    peer.ontrack = (event) => {
       const stream = event.streams[0];
 
       if (!stream) {
         return;
       }
 
-      setRemoteStreams((previousStreams) => ({
-        ...previousStreams,
+      setRemoteStreams((previous) => ({
+        ...previous,
         [remoteUserId]: stream,
       }));
     };
 
-    peerConnection.onconnectionstatechange = () => {
-      const state = peerConnection.connectionState;
+    peer.onconnectionstatechange =
+      () => {
+        if (
+          [
+            "failed",
+            "closed",
+            "disconnected",
+          ].includes(
+            peer.connectionState
+          )
+        ) {
+          peer.close();
 
-      if (
-        state === "failed" ||
-        state === "closed" ||
-        state === "disconnected"
-      ) {
-        peerConnection.close();
+          delete peersRef.current[
+            remoteUserId
+          ];
 
-        delete peerConnectionsRef.current[
-          remoteUserId
-        ];
+          setRemoteStreams((previous) => {
+            const next = {
+              ...previous,
+            };
 
-        setRemoteStreams((previousStreams) => {
-          const updatedStreams = {
-            ...previousStreams,
-          };
+            delete next[remoteUserId];
 
-          delete updatedStreams[remoteUserId];
+            return next;
+          });
+        }
+      };
 
-          return updatedStreams;
-        });
-      }
-    };
-
-    return peerConnection;
+    return peer;
   };
 
-  const createOffer = async (remoteUserId) => {
-    const peerConnection =
-      createPeerConnection(remoteUserId);
+  const createOffer = async (
+    remoteUserId
+  ) => {
+    const peer =
+      createPeer(remoteUserId);
 
-    const offer = await peerConnection.createOffer();
+    const offer =
+      await peer.createOffer();
 
-    await peerConnection.setLocalDescription(offer);
+    await peer.setLocalDescription(
+      offer
+    );
 
     sendMessage({
       type: "offer",
@@ -163,169 +174,173 @@ const JoinMeeting = () => {
     });
   };
 
-  const handleOffer = async (message) => {
-    const remoteUserId = message.userId;
-
-    if (!remoteUserId || remoteUserId === user?.id) {
-      return;
-    }
-
-    const peerConnection =
-      createPeerConnection(remoteUserId);
-
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(message.payload)
-    );
-
-    const answer =
-      await peerConnection.createAnswer();
-
-    await peerConnection.setLocalDescription(answer);
-
-    sendMessage({
-      type: "answer",
-      meeting: id,
-      target: remoteUserId,
-      payload: answer,
-    });
-  };
-
-  const handleAnswer = async (message) => {
-    const remoteUserId = message.userId;
-
-    const peerConnection =
-      peerConnectionsRef.current[remoteUserId];
-
-    if (!peerConnection) {
-      return;
-    }
-
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(message.payload)
-    );
-  };
-
-  const handleIceCandidate = async (message) => {
-    const remoteUserId = message.userId;
-
-    const peerConnection =
-      peerConnectionsRef.current[remoteUserId];
-
-    if (!peerConnection || !message.payload) {
-      return;
-    }
-
-    try {
-      await peerConnection.addIceCandidate(
-        new RTCIceCandidate(message.payload)
-      );
-    } catch {
-      return;
-    }
-  };
-
-  const handleLeave = (message) => {
-    const remoteUserId = message.userId;
-
-    if (!remoteUserId) {
-      return;
-    }
-
-    const peerConnection =
-      peerConnectionsRef.current[remoteUserId];
-
-    if (peerConnection) {
-      peerConnection.close();
-
-      delete peerConnectionsRef.current[
-        remoteUserId
-      ];
-    }
-
-    setRemoteStreams((previousStreams) => {
-      const updatedStreams = {
-        ...previousStreams,
-      };
-
-      delete updatedStreams[remoteUserId];
-
-      return updatedStreams;
-    });
-  };
-
-  const handleSocketMessage = async (message) => {
+  const handleMessage = async (message) => {
     if (message.meeting !== id) {
       return;
     }
 
-    try {
-      if (message.type === "join") {
-        if (
-          message.userId &&
-          message.userId !== user?.id
-        ) {
-          await createOffer(message.userId);
-        }
+    const remoteUserId =
+      message.userId;
 
-        return;
-      }
-
-      if (message.type === "offer") {
-        await handleOffer(message);
-        return;
-      }
-
-      if (message.type === "answer") {
-        await handleAnswer(message);
-        return;
-      }
-
-      if (message.type === "ice") {
-        await handleIceCandidate(message);
-        return;
-      }
-
-      if (message.type === "leave") {
-        handleLeave(message);
-      }
-    } catch {
-      setError(
-        "A connection error occurred with another participant."
-      );
-    }
-  };
-
-  const startMeeting = async () => {
-    if (!token) {
-      setError("Authentication token is missing.");
+    if (
+      remoteUserId &&
+      remoteUserId === user?.id
+    ) {
       return;
     }
 
+    if (message.type === "join") {
+      if (remoteUserId) {
+        await createOffer(
+          remoteUserId
+        );
+      }
+
+      return;
+    }
+
+    if (message.type === "offer") {
+      const peer =
+        createPeer(remoteUserId);
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(
+          message.payload
+        )
+      );
+
+      const answer =
+        await peer.createAnswer();
+
+      await peer.setLocalDescription(
+        answer
+      );
+
+      sendMessage({
+        type: "answer",
+        meeting: id,
+        target: remoteUserId,
+        payload: answer,
+      });
+
+      return;
+    }
+
+    if (message.type === "answer") {
+      const peer =
+        peersRef.current[
+          remoteUserId
+        ];
+
+      if (!peer) {
+        return;
+      }
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(
+          message.payload
+        )
+      );
+
+      return;
+    }
+
+    if (message.type === "ice") {
+      const peer =
+        peersRef.current[
+          remoteUserId
+        ];
+
+      if (!peer) {
+        return;
+      }
+
+      try {
+        await peer.addIceCandidate(
+          new RTCIceCandidate(
+            message.payload
+          )
+        );
+      } catch {
+        return;
+      }
+
+      return;
+    }
+
+    if (message.type === "leave") {
+      const peer =
+        peersRef.current[
+          remoteUserId
+        ];
+
+      peer?.close();
+
+      delete peersRef.current[
+        remoteUserId
+      ];
+
+      setRemoteStreams((previous) => {
+        const next = {
+          ...previous,
+        };
+
+        delete next[remoteUserId];
+
+        return next;
+      });
+    }
+  };
+
+  const joinMeeting = async () => {
     try {
       setJoining(true);
       setError("");
 
+      if (!token) {
+        throw new Error(
+          "Authentication token is missing."
+        );
+      }
+
       const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
+        await navigator.mediaDevices.getUserMedia(
+          {
+            video: true,
+            audio: true,
+          }
+        );
 
       localStreamRef.current = stream;
 
       if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.srcObject =
+          stream;
       }
 
+      const apiUrl =
+        import.meta.env.VITE_API_URL ||
+        "http://localhost:8080";
+
+      const wsUrl =
+        apiUrl.replace(
+          /^http/,
+          "ws"
+        ) +
+        `/api/meetings/${id}/ws`;
+
       await connectSocket(
-        `ws://localhost:8080/api/meetings/${id}/ws`,
+        wsUrl,
         token
       );
 
-      unsubscribeMessagesRef.current =
-        subscribeToMessages(handleSocketMessage);
+      unsubscribeRef.current =
+        subscribeToMessages(
+          handleMessage
+        );
 
       joinedRef.current = true;
+
       setJoined(true);
 
       sendMessage({
@@ -333,18 +348,20 @@ const JoinMeeting = () => {
         meeting: id,
       });
     } catch (error) {
+      setError(
+        error.message ||
+          "Unable to join meeting."
+      );
+
       if (localStreamRef.current) {
         localStreamRef.current
           .getTracks()
-          .forEach((track) => track.stop());
+          .forEach((track) =>
+            track.stop()
+          );
 
         localStreamRef.current = null;
       }
-
-      setError(
-        error.message ||
-          "Unable to join the meeting."
-      );
     } finally {
       setJoining(false);
     }
@@ -355,15 +372,16 @@ const JoinMeeting = () => {
       return;
     }
 
-    const nextState = !micEnabled;
+    const enabled = !micEnabled;
 
     localStreamRef.current
       .getAudioTracks()
-      .forEach((track) => {
-        track.enabled = nextState;
-      });
+      .forEach(
+        (track) =>
+          (track.enabled = enabled)
+      );
 
-    setMicEnabled(nextState);
+    setMicEnabled(enabled);
   };
 
   const toggleCamera = () => {
@@ -371,54 +389,58 @@ const JoinMeeting = () => {
       return;
     }
 
-    const nextState = !cameraEnabled;
+    const enabled =
+      !cameraEnabled;
 
     localStreamRef.current
       .getVideoTracks()
-      .forEach((track) => {
-        track.enabled = nextState;
-      });
+      .forEach(
+        (track) =>
+          (track.enabled = enabled)
+      );
 
-    setCameraEnabled(nextState);
+    setCameraEnabled(enabled);
   };
 
   const startScreenShare = async () => {
     try {
-      const screenStream =
-        await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
+      const stream =
+        await navigator.mediaDevices.getDisplayMedia(
+          {
+            video: true,
+          }
+        );
 
-      screenStreamRef.current = screenStream;
+      screenStreamRef.current =
+        stream;
 
-      const screenTrack =
-        screenStream.getVideoTracks()[0];
+      const track =
+        stream.getVideoTracks()[0];
 
       Object.values(
-        peerConnectionsRef.current
-      ).forEach((peerConnection) => {
-        const sender = peerConnection
-          .getSenders()
-          .find(
-            (item) =>
-              item.track?.kind === "video"
-          );
+        peersRef.current
+      ).forEach((peer) => {
+        const sender =
+          peer
+            .getSenders()
+            .find(
+              (item) =>
+                item.track?.kind ===
+                "video"
+            );
 
-        if (sender) {
-          sender.replaceTrack(screenTrack);
-        }
+        sender?.replaceTrack(track);
       });
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject =
-          screenStream;
+          stream;
       }
 
       setScreenSharing(true);
 
-      screenTrack.onended = () => {
-        stopScreenShare();
-      };
+      track.onended =
+        stopScreenShare;
     } catch {
       return;
     }
@@ -433,27 +455,29 @@ const JoinMeeting = () => {
     }
 
     Object.values(
-      peerConnectionsRef.current
-    ).forEach((peerConnection) => {
-      const sender = peerConnection
-        .getSenders()
-        .find(
-          (item) =>
-            item.track?.kind === "video"
-        );
+      peersRef.current
+    ).forEach((peer) => {
+      const sender =
+        peer
+          .getSenders()
+          .find(
+            (item) =>
+              item.track?.kind ===
+              "video"
+          );
 
-      if (sender) {
-        sender.replaceTrack(cameraTrack);
-      }
+      sender?.replaceTrack(
+        cameraTrack
+      );
     });
 
-    if (screenStreamRef.current) {
-      screenStreamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
+    screenStreamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop()
+      );
 
-      screenStreamRef.current = null;
-    }
+    screenStreamRef.current = null;
 
     if (localVideoRef.current) {
       localVideoRef.current.srcObject =
@@ -463,12 +487,7 @@ const JoinMeeting = () => {
     setScreenSharing(false);
   };
 
-  function cleanupMeeting() {
-    if (unsubscribeMessagesRef.current) {
-      unsubscribeMessagesRef.current();
-      unsubscribeMessagesRef.current = null;
-    }
-
+  const cleanup = () => {
     if (joinedRef.current) {
       sendMessage({
         type: "leave",
@@ -476,37 +495,38 @@ const JoinMeeting = () => {
       });
     }
 
+    unsubscribeRef.current?.();
+
     Object.values(
-      peerConnectionsRef.current
-    ).forEach((peerConnection) => {
-      peerConnection.close();
-    });
+      peersRef.current
+    ).forEach((peer) =>
+      peer.close()
+    );
 
-    peerConnectionsRef.current = {};
+    peersRef.current = {};
 
-    if (screenStreamRef.current) {
-      screenStreamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
+    localStreamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop()
+      );
 
-      screenStreamRef.current = null;
-    }
+    screenStreamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop()
+      );
 
-    if (localStreamRef.current) {
-      localStreamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
-
-      localStreamRef.current = null;
-    }
-
-    joinedRef.current = false;
+    localStreamRef.current = null;
+    screenStreamRef.current = null;
 
     disconnectSocket();
-  }
+
+    joinedRef.current = false;
+  };
 
   const leaveMeeting = () => {
-    cleanupMeeting();
+    cleanup();
 
     setJoined(false);
     setRemoteStreams({});
@@ -515,12 +535,25 @@ const JoinMeeting = () => {
   };
 
   useEffect(() => {
-    Object.entries(remoteStreams).forEach(
+    return () => {
+      cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    Object.entries(
+      remoteStreams
+    ).forEach(
       ([userId, stream]) => {
         const video =
-          remoteVideoRefs.current[userId];
+          remoteVideoRefs.current[
+            userId
+          ];
 
-        if (video && video.srcObject !== stream) {
+        if (
+          video &&
+          video.srcObject !== stream
+        ) {
           video.srcObject = stream;
         }
       }
@@ -530,7 +563,7 @@ const JoinMeeting = () => {
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#111827]">
-        <p className="text-sm text-slate-300">
+        <p className="text-slate-300">
           Loading meeting...
         </p>
       </div>
@@ -539,23 +572,15 @@ const JoinMeeting = () => {
 
   if (!meeting) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#111827] px-5">
-        <div className="w-full max-w-md rounded-xl bg-white p-8 text-center">
-          <h1 className="text-xl font-semibold text-slate-900">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#111827]">
+        <div className="rounded-xl bg-white p-8 text-center">
+          <h1 className="text-xl font-semibold">
             Meeting not found
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            {error || "The meeting does not exist."}
+            {error}
           </p>
-
-          <button
-            type="button"
-            onClick={() => navigate("/meetings")}
-            className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white"
-          >
-            Back to Meetings
-          </button>
         </div>
       </div>
     );
@@ -563,61 +588,49 @@ const JoinMeeting = () => {
 
   if (!joined) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#111827] px-5 py-8">
-        <div className="mx-auto max-w-3xl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#111827] p-5">
+        <div className="mx-auto max-w-3xl rounded-xl bg-white p-8">
+          <h1 className="text-center text-2xl font-semibold">
+            {meeting.title}
+          </h1>
+
+          <p className="mt-2 text-center text-sm text-slate-500">
+            Ready to join?
+          </p>
+
+          <div className="mt-6 overflow-hidden rounded-xl bg-black">
+            <video
+              ref={localVideoRef}
+              autoPlay
+              muted
+              playsInline
+              className="aspect-video w-full object-cover"
+            />
+          </div>
+
+          {error && (
+            <p className="mt-4 text-center text-sm text-red-500">
+              {error}
+            </p>
+          )}
+
           <button
             type="button"
-            onClick={() =>
-              navigate(`/meetings/${id}`)
-            }
-            className="mb-5 text-sm text-slate-300 hover:text-white"
+            onClick={joinMeeting}
+            disabled={joining}
+            className="mt-6 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-400"
           >
-            ← Back to Meeting
+            {joining
+              ? "Joining..."
+              : "Join Meeting"}
           </button>
-
-          <div className="rounded-xl bg-white p-8 shadow-lg">
-            <div className="text-center">
-              <h1 className="text-2xl font-semibold text-slate-900">
-                Join Meeting
-              </h1>
-
-              <p className="mt-2 text-sm text-slate-500">
-                {meeting.title}
-              </p>
-            </div>
-
-            <div className="mt-8 rounded-lg bg-slate-900 p-5 text-center">
-              <p className="text-sm text-slate-300">
-                Camera and microphone access
-              </p>
-
-              <p className="mt-2 text-xs text-slate-500">
-                Your camera and microphone will be
-                enabled when you join.
-              </p>
-            </div>
-
-            {error && (
-              <p className="mt-4 text-center text-sm text-red-500">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={startMeeting}
-              disabled={joining}
-              className="mt-6 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
-            >
-              {joining ? "Joining..." : "Join Meeting"}
-            </button>
-          </div>
         </div>
       </div>
     );
   }
 
-  const remoteUsers = Object.entries(remoteStreams);
+  const remoteUsers =
+    Object.entries(remoteStreams);
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-[#111827]">
@@ -627,9 +640,8 @@ const JoinMeeting = () => {
             {meeting.title}
           </h1>
 
-          <p className="mt-1 text-xs text-slate-400">
-            Meeting Code:{" "}
-            {meeting.meetingCode || "N/A"}
+          <p className="text-xs text-slate-400">
+            {meeting.meetingCode}
           </p>
         </div>
 
@@ -638,14 +650,8 @@ const JoinMeeting = () => {
         </span>
       </header>
 
-      <main className="flex flex-1 items-center justify-center p-5">
-        <div
-          className={`grid w-full max-w-6xl gap-4 ${
-            remoteUsers.length === 0
-              ? "grid-cols-1"
-              : "grid-cols-1 md:grid-cols-2"
-          }`}
-        >
+      <main className="flex-1 p-5">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 md:grid-cols-2">
           <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
             <video
               ref={localVideoRef}
@@ -658,14 +664,8 @@ const JoinMeeting = () => {
             {!cameraEnabled &&
               !screenSharing && (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                  <div className="text-center">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-700 text-2xl text-white">
-                      You
-                    </div>
-
-                    <p className="mt-3 text-sm text-slate-300">
-                      Camera is off
-                    </p>
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-700 text-white">
+                    You
                   </div>
                 </div>
               )}
@@ -675,38 +675,43 @@ const JoinMeeting = () => {
             </span>
           </div>
 
-          {remoteUsers.map(([userId, stream]) => (
-            <div
-              key={userId}
-              className="relative aspect-video overflow-hidden rounded-xl bg-black"
-            >
-              <video
-                ref={(element) => {
-                  remoteVideoRefs.current[userId] =
-                    element;
+          {remoteUsers.map(
+            ([userId, stream]) => (
+              <div
+                key={userId}
+                className="relative aspect-video overflow-hidden rounded-xl bg-black"
+              >
+                <video
+                  ref={(element) => {
+                    remoteVideoRefs.current[
+                      userId
+                    ] = element;
 
-                  if (
-                    element &&
-                    element.srcObject !== stream
-                  ) {
-                    element.srcObject = stream;
-                  }
-                }}
-                autoPlay
-                playsInline
-                className="h-full w-full object-cover"
-              />
+                    if (
+                      element &&
+                      element.srcObject !==
+                        stream
+                    ) {
+                      element.srcObject =
+                        stream;
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
 
-              <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs text-white">
-                Participant
-              </span>
-            </div>
-          ))}
+                <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs text-white">
+                  Participant
+                </span>
+              </div>
+            )
+          )}
         </div>
       </main>
 
-      <div className="flex justify-center px-5 pb-6">
-        <div className="flex items-center gap-3 rounded-full bg-slate-800 px-4 py-3">
+      <div className="flex justify-center pb-6">
+        <div className="flex gap-3 rounded-full bg-slate-800 p-3">
           <button
             type="button"
             onClick={toggleMic}

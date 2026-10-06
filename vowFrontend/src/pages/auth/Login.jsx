@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import useAuth from "../../hooks/UseAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, token } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [token, navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -18,7 +24,7 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       setError(error.message);
     }
@@ -37,7 +43,9 @@ const Login = () => {
             <div className="h-7 w-7 rounded-full border border-white" />
           </div>
 
-          <h1 className="text-5xl font-semibold tracking-tight">DeskVerse</h1>
+          <h1 className="text-5xl font-semibold tracking-tight">
+            DeskVerse
+          </h1>
 
           <p className="mt-3 text-base leading-6 text-white">
             Securely access your
@@ -102,7 +110,11 @@ const Login = () => {
               </div>
             </div>
 
-            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+            {error && (
+              <p className="mt-4 text-sm text-red-500">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"

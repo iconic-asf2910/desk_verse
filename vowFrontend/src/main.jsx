@@ -11,7 +11,11 @@ import { PollProvider } from "./contexts/PollContext.jsx";
 import { NotificationProvider } from "./contexts/NotificationContext.jsx";
 import { ActivityProvider } from "./contexts/ActivityContext.jsx";
 import { ChatProvider } from "./contexts/ChatContext.jsx";
-createRoot(document.getElementById("root")).render(
+import { PresenceProvider } from "./contexts/PresenceContext.jsx";
+
+createRoot(
+  document.getElementById("root")
+).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
@@ -22,7 +26,9 @@ createRoot(document.getElementById("root")).render(
                 <NotificationProvider>
                   <ActivityProvider>
                     <ChatProvider>
-                      <App />
+                      <PresenceProvider>
+                        <App />
+                      </PresenceProvider>
                     </ChatProvider>
                   </ActivityProvider>
                 </NotificationProvider>
@@ -32,5 +38,5 @@ createRoot(document.getElementById("root")).render(
         </WorkspaceProvider>
       </AuthProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 );

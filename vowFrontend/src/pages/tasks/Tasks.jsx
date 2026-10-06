@@ -21,7 +21,9 @@ const Tasks = () => {
   const { workspace } = useWorkspace();
 
   const [title, setTitle] = useState("");
-  const [assignee, setAssignee] = useState(user?.name || "");
+  const [assignee, setAssignee] = useState(
+    user?.id || ""
+  );
   const [dueDate, setDueDate] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
@@ -54,7 +56,9 @@ const Tasks = () => {
         filter === "All" ||
         task.status === filter;
 
-      return matchesSearch && matchesFilter;
+      return (
+        matchesSearch && matchesFilter
+      );
     });
   }, [tasks, search, filter]);
 
@@ -63,23 +67,29 @@ const Tasks = () => {
   ).length;
 
   const overdueTasks = tasks.filter((task) => {
-    if (!task.dueDate || task.status === "Done") {
+    if (
+      !task.dueDate ||
+      task.status === "Done"
+    ) {
       return false;
     }
 
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
 
     return (
-      new Date(`${task.dueDate}T00:00:00`) <
-      today
+      new Date(
+        `${task.dueDate}T00:00:00`
+      ) < today
     );
   }).length;
 
   const taskEfficiency =
     tasks.length > 0
       ? Math.round(
-          (completedTasks / tasks.length) * 100
+          (completedTasks / tasks.length) *
+            100
         )
       : 0;
 
@@ -87,13 +97,17 @@ const Tasks = () => {
     return members.map((member) => ({
       ...member,
       count: tasks.filter(
-        (task) => task.assignee === member.name
+        (task) =>
+          String(task.assignedTo) ===
+          String(member.id)
       ).length,
     }));
   }, [members, tasks]);
 
   const maxWorkload = Math.max(
-    ...workload.map((member) => member.count),
+    ...workload.map(
+      (member) => member.count
+    ),
     1
   );
 
@@ -112,29 +126,36 @@ const Tasks = () => {
       .slice(0, 3);
   }, [tasks]);
 
-  const handleAddTask = (event) => {
+  const handleAddTask = async (event) => {
     event.preventDefault();
 
     const taskTitle = title.trim();
+
     const taskAssignee =
-      assignee.trim() || user?.name || "You";
+      assignee || user?.id || "";
+
     const taskDueDate =
       dueDate ||
-      new Date().toISOString().split("T")[0];
+      new Date()
+        .toISOString()
+        .split("T")[0];
 
     if (!taskTitle) {
       return;
     }
 
-    addTask({
+    await addTask({
       title: taskTitle,
-      assignee: taskAssignee,
+      assignedTo: taskAssignee,
       dueDate: taskDueDate,
+      description: "",
+      status: "To Do",
+      priority: "medium",
     });
 
     setTitle("");
     setDueDate("");
-    setAssignee(user?.name || "");
+    setAssignee(user?.id || "");
   };
 
   const formatDate = (date) => {
@@ -149,6 +170,14 @@ const Tasks = () => {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const getMember = (assignedTo) => {
+    return members.find(
+      (member) =>
+        String(member.id) ===
+        String(assignedTo)
+    );
   };
 
   const getAvatar = (member) => {
@@ -179,7 +208,8 @@ const Tasks = () => {
         </h1>
 
         <p className="mt-1 text-sm text-slate-600">
-          Manage your workspace tasks and track your progress.
+          Manage your workspace tasks and
+          track your progress.
         </p>
       </div>
 
@@ -204,18 +234,22 @@ const Tasks = () => {
               onChange={(event) =>
                 setAssignee(event.target.value)
               }
-              className="h-10 w-[130px] rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500"
+              className="h-10 w-[150px] rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500"
             >
-              <option value="">You</option>
-
-              {members.map((member) => (
-                <option
-                  key={member.id}
-                  value={member.name}
-                >
-                  {member.name}
+              {members.length === 0 ? (
+                <option value="">
+                  You
                 </option>
-              ))}
+              ) : (
+                members.map((member) => (
+                  <option
+                    key={member.id}
+                    value={member.id}
+                  >
+                    {member.name}
+                  </option>
+                ))
+              )}
             </select>
 
             <div className="relative">
@@ -228,7 +262,9 @@ const Tasks = () => {
                 type="date"
                 value={dueDate}
                 onChange={(event) =>
-                  setDueDate(event.target.value)
+                  setDueDate(
+                    event.target.value
+                  )
                 }
                 className="h-10 w-[155px] rounded-md border border-slate-300 bg-white px-3 pr-9 text-sm outline-none focus:border-blue-500"
               />
@@ -310,16 +346,24 @@ const Tasks = () => {
                 <select
                   value={filter}
                   onChange={(event) =>
-                    setFilter(event.target.value)
+                    setFilter(
+                      event.target.value
+                    )
                   }
                   className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none"
                 >
-                  <option value="All">All</option>
-                  <option value="To Do">To Do</option>
+                  <option value="All">
+                    All
+                  </option>
+                  <option value="To Do">
+                    To Do
+                  </option>
                   <option value="In Progress">
                     In Progress
                   </option>
-                  <option value="Done">Done</option>
+                  <option value="Done">
+                    Done
+                  </option>
                 </select>
               </div>
 
@@ -333,7 +377,9 @@ const Tasks = () => {
                   type="text"
                   value={search}
                   onChange={(event) =>
-                    setSearch(event.target.value)
+                    setSearch(
+                      event.target.value
+                    )
                   }
                   placeholder="Search Task."
                   className="h-9 w-40 rounded-md border border-slate-300 pl-9 pr-3 text-sm outline-none focus:border-blue-500"
@@ -356,10 +402,10 @@ const Tasks = () => {
                 </div>
               ) : (
                 filteredTasks.map((task) => {
-                  const member = members.find(
-                    (item) =>
-                      item.name === task.assignee
-                  );
+                  const member =
+                    getMember(
+                      task.assignedTo
+                    );
 
                   return (
                     <div
@@ -370,12 +416,14 @@ const Tasks = () => {
                         <input
                           type="checkbox"
                           checked={
-                            task.status === "Done"
+                            task.status ===
+                            "Done"
                           }
                           onChange={() =>
                             updateTaskStatus(
                               task.id,
-                              task.status === "Done"
+                              task.status ===
+                                "Done"
                                 ? "To Do"
                                 : "Done"
                             )
@@ -384,7 +432,8 @@ const Tasks = () => {
 
                         <span
                           className={`truncate ${
-                            task.status === "Done"
+                            task.status ===
+                            "Done"
                               ? "text-slate-400 line-through"
                               : "text-slate-700"
                           }`}
@@ -395,18 +444,24 @@ const Tasks = () => {
 
                       <div className="flex min-w-0 items-center gap-2">
                         <img
-                          src={getAvatar(member)}
+                          src={getAvatar(
+                            member
+                          )}
                           alt=""
                           className="h-6 w-6 shrink-0 rounded-full object-cover"
                         />
 
                         <span className="truncate text-slate-600">
-                          {task.assignee}
+                          {member?.name ||
+                            task.assignedTo ||
+                            "Unassigned"}
                         </span>
                       </div>
 
                       <span className="text-slate-500">
-                        {formatDate(task.dueDate)}
+                        {formatDate(
+                          task.dueDate
+                        )}
                       </span>
 
                       <select
@@ -460,7 +515,8 @@ const Tasks = () => {
             <div className="mt-5 space-y-4">
               {workload.map((member) => {
                 const width =
-                  (member.count / maxWorkload) *
+                  (member.count /
+                    maxWorkload) *
                   100;
 
                 return (
@@ -504,7 +560,8 @@ const Tasks = () => {
             </h2>
 
             <div className="mt-3">
-              {upcomingDeadlines.length === 0 ? (
+              {upcomingDeadlines.length ===
+              0 ? (
                 <p className="py-3 text-sm text-slate-500">
                   No upcoming deadlines.
                 </p>

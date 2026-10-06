@@ -1,96 +1,149 @@
-import { createContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+} from "react";
+import useWorkspace from "../hooks/UseWorkspace";
+import useAuth from "../hooks/UseAuth";
+import {
+  getPolls,
+  createPoll,
+  votePoll,
+  closePoll,
+} from "../services/api/pollApi";
 
 const PollContext = createContext();
 
 const PollProvider = ({ children }) => {
-  const [polls, setPolls] = useState(() => {
-    const savedPolls = localStorage.getItem("DeskVerse_polls");
-    return savedPolls ? JSON.parse(savedPolls) : [];
-  });
+  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+
+  const [polls, setPolls] = useState([]);
+  const [loadingPolls, setLoadingPolls] =
+    useState(false);
+  const [pollError, setPollError] =
+    useState("");
+
+  const loadPolls = async () => {
+    if (!workspace?.id) {
+      setPolls([]);
+      return;
+    }
+
+    try {
+      setLoadingPolls(true);
+      setPollError("");
+
+      const data = await getPolls(
+        workspace.id
+      );
+
+      setPolls(
+        Array.isArray(data) ? data : []
+      );
+    } catch (error) {
+      setPollError(error.message);
+      setPolls([]);
+    } finally {
+      setLoadingPolls(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("DeskVerse_polls", JSON.stringify(polls));
-  }, [polls]);
+    loadPolls();
+  }, [workspace?.id]);
 
-  const addPoll = ({ question, options, createdBy }) => {
-    const newPoll = {
-      id: crypto.randomUUID(),
-      question,
-      options: options.map((option) => ({
-        id: crypto.randomUUID(),
-        text: option,
-        votes: 0,
-        voters: [],
-      })),
-      createdBy,
-      status: "Active",
-      createdAt: new Date().toISOString(),
-    };
+  const addPoll = async ({
+    question,
+    options,
+    eligibleUsers = [],
+    expiresAt = "",
+  }) => {
+    if (!workspace?.id) {
+      throw new Error(
+        "No workspace selected."
+      );
+    }
 
-    setPolls((previousPolls) => [newPoll, ...previousPolls]);
-  };
-
-  const votePoll = (pollId, optionId, voterId) => {
-    setPolls((previousPolls) =>
-      previousPolls.map((poll) => {
-        if (poll.id !== pollId || poll.status === "Closed") {
-          return poll;
-        }
-
-        const previousOption = poll.options.find((option) =>
-          option.voters.includes(voterId),
-        );
-
-        if (previousOption?.id === optionId) {
-          return poll;
-        }
-
-        return {
-          ...poll,
-          options: poll.options.map((option) => {
-            const wasSelected = option.voters.includes(voterId);
-
-            const isNewSelection = option.id === optionId;
-
-            if (wasSelected) {
-              return {
-                ...option,
-                votes: Math.max(0, option.votes - 1),
-                voters: option.voters.filter((id) => id !== voterId),
-              };
-            }
-
-            if (isNewSelection) {
-              return {
-                ...option,
-                votes: option.votes + 1,
-                voters: [...option.voters, voterId],
-              };
-            }
-
-            return option;
-          }),
-        };
-      }),
-    );
-  };
-
-  const closePoll = (pollId) => {
-    setPolls((previousPolls) =>
-      previousPolls.map((poll) =>
-        poll.id === pollId
-          ? {
-              ...poll,
-              status: "Closed",
-            }
-          : poll,
+    const poll = await createPoll({
+      workspaceId: workspace.id,
+      question: question.trim(),
+      options: options.map((option) =>
+        option.trim()
       ),
+      eligibleUsers,
+      expiresAt,
+    });
+
+    setPolls((previous) => [
+      poll,
+      ...previous,
+    ]);
+
+    return poll;
+  };
+
+  const votePollOption = async (
+    pollId,
+    option
+  ) => {
+    const updated = await votePoll(
+      pollId,
+      option
+    );
+
+    setPolls((previous) =>
+      previous.map((poll) =>
+        poll.id === pollId
+          ? updated
+          : poll
+      )
+    );
+
+    return updated;
+  };
+
+  const closePollOption = async (
+    pollId
+  ) => {
+    const closed = await closePoll(
+      pollId
+    );
+
+    setPolls((previous) =>
+      previous.map((poll) =>
+        poll.id === pollId
+          ? closed
+          : poll
+      )
+    );
+
+    return closed;
+  };
+
+  const hasVoted = (poll) => {
+    if (!user?.id) {
+      return false;
+    }
+
+    return Boolean(
+      poll.votes?.some(
+        (vote) =>
+          vote.userId === user.id
+      )
     );
   };
 
-  const deletePoll = (pollId) => {
-    setPolls((previousPolls) =>
-      previousPolls.filter((poll) => poll.id !== pollId),
+  const getUserVote = (poll) => {
+    if (!user?.id) {
+      return null;
+    }
+
+    return (
+      poll.votes?.find(
+        (vote) =>
+          vote.userId === user.id
+      )?.option || null
     );
   };
 
@@ -99,9 +152,13 @@ const PollProvider = ({ children }) => {
       value={{
         polls,
         addPoll,
-        votePoll,
-        closePoll,
-        deletePoll,
+        votePoll: votePollOption,
+        closePoll: closePollOption,
+        hasVoted,
+        getUserVote,
+        loadPolls,
+        loadingPolls,
+        pollError,
       }}
     >
       {children}
@@ -109,4 +166,7 @@ const PollProvider = ({ children }) => {
   );
 };
 
-export { PollContext, PollProvider };
+export {
+  PollContext,
+  PollProvider,
+};

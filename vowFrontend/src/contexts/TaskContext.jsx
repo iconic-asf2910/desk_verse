@@ -1,77 +1,181 @@
-import { createContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+} from "react";
+import useWorkspace from "../hooks/UseWorkspace";
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../services/api/taskApi";
 
 const TaskContext = createContext();
 
+const toUiStatus = (status) => {
+  if (status === "completed") {
+    return "Done";
+  }
+
+  if (status === "in_progress") {
+    return "In Progress";
+  }
+
+  return "To Do";
+};
+
+const toApiStatus = (status) => {
+  if (status === "Done") {
+    return "completed";
+  }
+
+  if (status === "In Progress") {
+    return "in_progress";
+  }
+
+  return "todo";
+};
+
+const normalizeTask = (task) => ({
+  ...task,
+  status: toUiStatus(task.status),
+});
+
 const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const savedTasks = localStorage.getItem("DeskVerse_tasks");
+  const { workspace } = useWorkspace();
 
-      if (!savedTasks) {
-        return [];
-      }
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] =
+    useState(false);
+  const [taskError, setTaskError] =
+    useState("");
 
-      const parsedTasks = JSON.parse(savedTasks);
-
-      return Array.isArray(parsedTasks) ? parsedTasks : [];
-    } catch {
-      return [];
+  const loadTasks = async () => {
+    if (!workspace?.id) {
+      setTasks([]);
+      return;
     }
-  });
+
+    try {
+      setLoadingTasks(true);
+      setTaskError("");
+
+      const data = await getTasks(
+        workspace.id
+      );
+
+      setTasks(
+        Array.isArray(data)
+          ? data.map(normalizeTask)
+          : []
+      );
+    } catch (error) {
+      setTaskError(error.message);
+      setTasks([]);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("DeskVerse_tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    loadTasks();
+  }, [workspace?.id]);
 
-  const addTask = (taskData) => {
-    const newTask = {
-      id: crypto.randomUUID(),
+  const addTask = async (taskData) => {
+    if (!workspace?.id) {
+      throw new Error(
+        "No workspace selected."
+      );
+    }
+
+    const task = await createTask({
+      workspaceId: workspace.id,
       title: taskData.title.trim(),
-      assignee: taskData.assignee,
-      dueDate: taskData.dueDate,
-      status: "To Do",
-      createdAt: new Date().toISOString(),
+      description:
+        taskData.description || "",
+      assignedTo:
+        taskData.assignedTo || "",
+      status: toApiStatus(
+        taskData.status || "To Do"
+      ),
+      priority:
+        taskData.priority || "medium",
+    });
+
+    const normalizedTask =
+      normalizeTask(task);
+
+    setTasks((previous) => [
+      ...previous,
+      normalizedTask,
+    ]);
+
+    return normalizedTask;
+  };
+
+  const updateTaskStatus = async (
+    taskId,
+    status
+  ) => {
+    const updated = await updateTask(
+      taskId,
+      {
+        status: toApiStatus(status),
+      }
+    );
+
+    setTasks((previous) =>
+      previous.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              ...normalizeTask(updated),
+            }
+          : task
+      )
+    );
+  };
+
+  const updateTaskData = async (
+    taskId,
+    data
+  ) => {
+    const payload = {
+      ...data,
     };
 
-    setTasks((previousTasks) => [...previousTasks, newTask]);
+    if (payload.status) {
+      payload.status = toApiStatus(
+        payload.status
+      );
+    }
 
-    return newTask;
-  };
+    const updated = await updateTask(
+      taskId,
+      payload
+    );
 
-  const updateTaskStatus = (taskId, status) => {
-    setTasks((previousTasks) =>
-      previousTasks.map((task) =>
+    setTasks((previous) =>
+      previous.map((task) =>
         task.id === taskId
           ? {
               ...task,
-              status,
+              ...normalizeTask(updated),
             }
-          : task,
-      ),
+          : task
+      )
     );
   };
 
-  const updateTask = (taskId, updates) => {
-    setTasks((previousTasks) =>
-      previousTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              ...updates,
-            }
-          : task,
-      ),
-    );
-  };
+  const removeTask = async (taskId) => {
+    await deleteTask(taskId);
 
-  const deleteTask = (taskId) => {
-    setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== taskId),
+    setTasks((previous) =>
+      previous.filter(
+        (task) => task.id !== taskId
+      )
     );
-  };
-
-  const clearTasks = () => {
-    setTasks([]);
   };
 
   return (
@@ -80,9 +184,11 @@ const TaskProvider = ({ children }) => {
         tasks,
         addTask,
         updateTaskStatus,
-        updateTask,
-        deleteTask,
-        clearTasks,
+        updateTask: updateTaskData,
+        deleteTask: removeTask,
+        loadTasks,
+        loadingTasks,
+        taskError,
       }}
     >
       {children}
@@ -90,4 +196,7 @@ const TaskProvider = ({ children }) => {
   );
 };
 
-export { TaskContext, TaskProvider };
+export {
+  TaskContext,
+  TaskProvider,
+};
