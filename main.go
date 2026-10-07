@@ -69,6 +69,11 @@ func main() {
 	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
 	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
+		// Member-management sub-route: /api/workspaces/{id}/members
+		if strings.Contains(path, "/members") && !strings.Contains(path, "/rooms") {
+			workspace.AddWorkspaceMember(w, r)
+			return
+		}
 		if strings.Contains(path, "/rooms") {
 			room.HandleRooms(w, r)
 		} else {

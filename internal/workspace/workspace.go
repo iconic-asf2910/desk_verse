@@ -349,6 +349,98 @@ func UpdateWorkspace(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"updated"}`))
 }
 
+func AddWorkspaceMember(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := getUserID(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := r.URL.Path
+	parts := strings.Split(path, "/")
+	// Expected: /api/workspaces/{id}/members
+	if len(parts) < 5 || parts[3] == "" || parts[4] != "members" {
+		http.Error(w, "Workspace ID and /members required", http.StatusBadRequest)
+		return
+	}
+	wsID := parts[3]
+
+	if db.DB == nil {
+		if err := db.Connect(); err != nil {
+			http.Error(w, "Database connection error", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	col := db.DB.Collection("workspaces")
+	var ws models.Workspace
+	objID, err := bson.ObjectIDFromHex(wsID)
+	if err != nil {
+		http.Error(w, "Invalid workspace ID", http.StatusBadRequest)
+		return
+	}
+	err = col.FindOne(ctx, bson.M{"_id": objID}).Decode(&ws)
+	if err != nil {
+		http.Error(w, "Workspace not found", http.StatusNotFound)
+		return
+	}
+
+	if !isOwnerOrAuthorized(r, &ws) {
+		http.Error(w, "Access denied: only owner/manager/supervisor can manage members", http.StatusForbidden)
+		return
+	}
+
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if req.Email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	userCol := db.DB.Collection("users")
+	var targetUser models.User
+	err = userCol.FindOne(ctx, bson.M{"email": req.Email}).Decode(&targetUser)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	for _, m := range ws.Members {
+		if m == targetUser.ID.Hex() {
+			http.Error(w, "User already a member", http.StatusConflict)
+			return
+		}
+	}
+
+	_, err = col.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$addToSet": bson.M{"members": targetUser.ID.Hex()}})
+	if err != nil {
+		http.Error(w, "Failed to add member", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":   "Member added",
+		"workspaceId": wsID,
+		"memberId":  targetUser.ID.Hex(),
+		"email":     req.Email,
+	})
+}
+
 func DeleteWorkspace(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
