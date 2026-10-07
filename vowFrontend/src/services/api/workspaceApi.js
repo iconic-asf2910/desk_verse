@@ -28,10 +28,21 @@ const deleteWorkspace = async (id) => {
   });
 };
 
+const addWorkspaceMember = async (workspaceId, email) => {
+  return await apiRequest(
+    `/api/workspaces/${workspaceId}/members`,
+    {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }
+  );
+};
+
 export {
   getWorkspaces,
   getWorkspace,
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
+  addWorkspaceMember,
 };

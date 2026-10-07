@@ -139,5 +139,4 @@ const WorkspaceDetails = () => {
     </div>
   );
 };
-
 export default WorkspaceDetails;

@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 
 import useRoom from "../../hooks/UseRoom";
 import useWorkspace from "../../hooks/UseWorkspace";
+import { addWorkspaceMember } from "../../services/api/workspaceApi";
 import useAuth from "../../hooks/UseAuth";
 
 const roomImages = [
@@ -82,6 +83,11 @@ const Dashboard = () => {
   const [roomName, setRoomName] = useState("");
 
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [showManageMembers, setShowManageMembers] = useState(false);
+  const [memberEmail, setMemberEmail] = useState("");
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberSuccess, setMemberSuccess] = useState("");
+  const [memberError, setMemberError] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [workspaceCreateError, setWorkspaceCreateError] = useState("");
@@ -248,6 +254,16 @@ const Dashboard = () => {
             >
               <Plus size={17} />
               Workspace
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowManageMembers(true)}
+              disabled={!workspace}
+              className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Users size={17} />
+              Manage Members
             </button>
 
             <button
@@ -608,6 +624,50 @@ const Dashboard = () => {
             </div>
           </aside>
         </div>
+
+        {showManageMembers && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Workspace Members</h2>
+                  <p className="mt-1 text-xs text-slate-500">Invite members to {workspace?.name || "this workspace"}.</p>
+                </div>
+                <button type="button" onClick={() => { setShowManageMembers(false); setMemberEmail(""); setMemberSuccess(""); setMemberError(""); }} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X size={17} /></button>
+              </div>
+
+              {workspace?.members && workspace.members.length > 0 && (
+                <div className="mt-5 max-h-48 overflow-y-auto">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Current Members</h3>
+                  <ul className="mt-2 divide-y divide-slate-100">
+                    {workspace.members.map((m) => (
+                      <li key={m.id || m.email} className="flex items-center gap-3 py-2 text-sm text-slate-800">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-700">{m.name ? m.name[0] : (m.email ? m.email[0] : "?")}</div>
+                        <div>
+                          <p className="font-medium">{m.name || m.email || "Unknown"}</p>
+                          {m.email && <p className="text-xs text-slate-500">{m.email}</p>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-5">
+                <label htmlFor="dashboard-member-email" className="mb-1 block text-sm font-medium text-slate-700">Enter member email</label>
+                <input id="dashboard-member-email" type="email" value={memberEmail} onChange={(e) => { setMemberEmail(e.target.value); setMemberError(""); setMemberSuccess(""); }} placeholder="user@example.com" className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-[#6254f5] focus:ring-2 focus:ring-[#6254f5]/10" />
+              </div>
+
+              {memberSuccess && <p className="mt-3 text-sm text-emerald-600">{memberSuccess}</p>}
+              {memberError && <p className="mt-3 text-sm text-red-600">{memberError}</p>}
+
+              <div className="mt-5 flex justify-end gap-3">
+                <button type="button" onClick={() => { setShowManageMembers(false); setMemberEmail(""); setMemberSuccess(""); setMemberError(""); }} className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button type="button" onClick={async () => { setMemberError(""); setMemberSuccess(""); if (!memberEmail.trim()) { setMemberError("Please enter an email."); return; } setMemberLoading(true); try { await addWorkspaceMember(workspace?.id, memberEmail.trim()); setMemberSuccess("Member added."); setMemberEmail(""); try { const refreshed = await import("../../services/api/workspaceApi").then(m => m.getWorkspace ? m.getWorkspace(workspace.id) : null); } catch {} } catch (err) { const msg = err?.message || "Failed to add member."; if (msg.toLowerCase().includes("not found")) setMemberError("User not found."); else if (msg.toLowerCase().includes("already")) setMemberError("Already a member."); else if (msg.toLowerCase().includes("unauthorized")) setMemberError("Unauthorized."); else if (msg.toLowerCase().includes("forbidden")) setMemberError("No permission."); else setMemberError(msg); } finally { setMemberLoading(false); } }} disabled={memberLoading} className="rounded-lg bg-[#6254f5] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#5144e7] disabled:opacity-60">{memberLoading ? "Adding..." : "Add Member"}</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showAddRoom && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">

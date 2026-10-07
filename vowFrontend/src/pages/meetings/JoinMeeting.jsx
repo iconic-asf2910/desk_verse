@@ -303,19 +303,31 @@ const JoinMeeting = () => {
         );
       }
 
-      const stream =
-        await navigator.mediaDevices.getUserMedia(
-          {
-            video: true,
-            audio: true,
+      let stream = null;
+      let hasVideo = false;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        hasVideo = true;
+      } catch {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        } catch {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: false });
+          } catch {
+            stream = null;
           }
-        );
+        }
+      }
 
-      localStreamRef.current = stream;
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject =
-          stream;
+      if (stream) {
+        localStreamRef.current = stream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+      } else {
+        setCameraEnabled(false);
+        setMicEnabled(false);
       }
 
       const apiUrl =
@@ -346,6 +358,7 @@ const JoinMeeting = () => {
       sendMessage({
         type: "join",
         meeting: id,
+        userId: user?.id,
       });
     } catch (error) {
       setError(
@@ -539,6 +552,17 @@ const JoinMeeting = () => {
       cleanup();
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      joined &&
+      localVideoRef.current &&
+      localStreamRef.current
+    ) {
+      localVideoRef.current.srcObject =
+        localStreamRef.current;
+    }
+  }, [joined]);
 
   useEffect(() => {
     Object.entries(
