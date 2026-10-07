@@ -78,7 +78,7 @@ const Meetings = () => {
     }
   };
 
-  const filteredMeetings = meetings.filter((meeting) => {
+  const filteredMeetings = (meetings || []).filter((meeting) => {
     const searchText = search.toLowerCase();
 
     return (
