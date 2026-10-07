@@ -6,14 +6,11 @@ import {
   Users,
   X,
 } from "lucide-react";
+
 import useActivity from "../../hooks/UseActivity";
 
 const Activities = () => {
-  const {
-    activities,
-    deleteActivity,
-    clearActivities,
-  } = useActivity();
+  const { activities, deleteActivity, clearActivities } = useActivity();
 
   const getIcon = (type) => {
     if (type === "task") {
@@ -36,12 +33,13 @@ const Activities = () => {
   };
 
   const formatTime = (date) => {
-    const difference =
-      Date.now() - new Date(date).getTime();
+    if (!date) {
+      return "";
+    }
 
-    const minutes = Math.floor(
-      difference / 60000
-    );
+    const difference = Date.now() - new Date(date).getTime();
+
+    const minutes = Math.floor(difference / 60000);
 
     if (minutes < 1) {
       return "Just now";
@@ -67,9 +65,7 @@ const Activities = () => {
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
-              Activity
-            </h1>
+            <h1 className="text-2xl font-semibold text-slate-900">Activity</h1>
 
             <p className="mt-1 text-sm text-slate-500">
               See what is happening in your workspace.
@@ -90,10 +86,7 @@ const Activities = () => {
         <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {activities.length === 0 ? (
             <div className="px-6 py-16 text-center">
-              <CheckCircle2
-                size={36}
-                className="mx-auto text-slate-300"
-              />
+              <CheckCircle2 size={36} className="mx-auto text-slate-300" />
 
               <h2 className="mt-4 text-base font-semibold text-slate-800">
                 No recent activity
@@ -116,10 +109,17 @@ const Activities = () => {
 
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-slate-800">
-                      <span className="font-semibold">
-                        {activity.user}
-                      </span>{" "}
-                      {activity.message}
+                      {activity.user && (
+                        <span className="font-semibold">{activity.user}</span>
+                      )}
+
+                      {activity.user && " "}
+
+                      <span className="font-medium">{activity.action}</span>
+
+                      {activity.description && (
+                        <span> {activity.description}</span>
+                      )}
                     </p>
 
                     <p className="mt-1 text-xs text-slate-400">
@@ -129,9 +129,7 @@ const Activities = () => {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      deleteActivity(activity.id)
-                    }
+                    onClick={() => deleteActivity(activity.id)}
                     className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-500"
                   >
                     <X size={17} />

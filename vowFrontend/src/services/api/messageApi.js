@@ -16,11 +16,7 @@ const getMessage = async (messageId) => {
   return await apiRequest(`/api/messages/${messageId}`);
 };
 
-const createMessage = async (
-  workspaceId,
-  roomId,
-  content
-) => {
+const createMessage = async (workspaceId, roomId, content) => {
   return await apiRequest("/api/messages", {
     method: "POST",
     body: JSON.stringify({
@@ -31,10 +27,7 @@ const createMessage = async (
   });
 };
 
-const updateMessage = async (
-  messageId,
-  content
-) => {
+const updateMessage = async (messageId, content) => {
   return await apiRequest(`/api/messages/${messageId}`, {
     method: "PUT",
     body: JSON.stringify({
@@ -44,18 +37,9 @@ const updateMessage = async (
 };
 
 const deleteMessage = async (messageId) => {
-  return await apiRequest(
-    `/api/messages/${messageId}`,
-    {
-      method: "DELETE",
-    }
-  );
+  return await apiRequest(`/api/messages/${messageId}`, {
+    method: "DELETE",
+  });
 };
 
-export {
-  getMessages,
-  getMessage,
-  createMessage,
-  updateMessage,
-  deleteMessage,
-};
+export { getMessages, getMessage, createMessage, updateMessage, deleteMessage };

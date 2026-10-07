@@ -1,60 +1,57 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useEffect, useState } from "react";
 
-const ActivityContext =
-  createContext();
+const ActivityContext = createContext();
 
-const ActivityProvider = ({
-  children,
-}) => {
-  const [activities, setActivities] =
-    useState(() => {
-      const saved =
-        localStorage.getItem(
-          "deskverse_activities"
-        );
+const STORAGE_KEY = "deskverse_activities";
 
-      return saved
-        ? JSON.parse(saved)
-        : [];
-    });
+const ActivityProvider = ({ children }) => {
+  const [activities, setActivities] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) {
+        return [];
+      }
+
+      const parsed = JSON.parse(saved);
+
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
-    localStorage.setItem(
-      "deskverse_activities",
-      JSON.stringify(activities)
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
   }, [activities]);
 
   const addActivity = ({
     action,
     description,
     type = "general",
+    user = null,
   }) => {
     const activity = {
       id: crypto.randomUUID(),
-      action,
-      description,
+
+      action: action || "Workspace activity",
+
+      description: description || "",
+
       type,
-      createdAt:
-        new Date().toISOString(),
+
+      user,
+
+      createdAt: new Date().toISOString(),
     };
 
-    setActivities((previous) => [
-      activity,
-      ...previous,
-    ]);
+    setActivities((previous) => [activity, ...previous]);
+
+    return activity;
   };
 
   const deleteActivity = (id) => {
-    setActivities((previous) =>
-      previous.filter(
-        (item) => item.id !== id
-      )
-    );
+    setActivities((previous) => previous.filter((item) => item.id !== id));
   };
 
   const clearActivities = () => {
@@ -75,7 +72,4 @@ const ActivityProvider = ({
   );
 };
 
-export {
-  ActivityContext,
-  ActivityProvider,
-};
+export { ActivityContext, ActivityProvider };

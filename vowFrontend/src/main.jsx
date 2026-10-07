@@ -42,3 +42,5 @@ createRoot(
     </BrowserRouter>
   </StrictMode>
 );
+
+//root- place react gets attached to html page
