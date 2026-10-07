@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/iconic-asf2910/vow/internal/analytics"
@@ -119,9 +120,14 @@ func main() {
 		}
 	})
 
-	fmt.Println("VOW backend running on :8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	err := http.ListenAndServe(":8080", corsMiddleware(http.DefaultServeMux))
+	fmt.Println("VOW backend running on :" + port)
+
+	err := http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux))
 	if err != nil {
 		fmt.Println("Server error:", err)
 	}
