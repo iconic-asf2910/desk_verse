@@ -25,7 +25,7 @@ ALL_MODELS = [PRIMARY_MODEL] + FALLBACK_MODELS
 
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".m4a", ".webm", ".ogg", ".flac", ".aac"}
 ALLOWED_MIME_PREFIXES = ("audio/", "video/webm", "video/ogg")
-MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB limit
+MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  
 
 
 @asynccontextmanager
