@@ -13,6 +13,7 @@ from google import genai
 from google.genai import types
 
 load_dotenv()
+SERVICE_NAME = os.getenv("SERVICE_NAME", "Deskverse AI Service")
 raw_key = os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI API KEY")
 
 if not raw_key:
@@ -39,8 +40,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="VOW AI Meeting Service",
-    description="Multimodal Audio Transcription and Structured Summarization Engine",
+    title=f"{SERVICE_NAME} API",
+    description="Deskverse Multimodal Audio Transcription and Structured Summarization Engine",
     version="2.0.0",
     lifespan=lifespan
 )
@@ -90,7 +91,7 @@ Do not summarize, rephrase, or omit any spoken sentences.
 """
 
 SUMMARY_PROMPT = """
-You are the official VOW AI Meeting Assistant.
+You are the official Deskverse AI Meeting Assistant.
 Analyze this meeting transcript and extract structured meeting notes:
 1. Executive summary of discussions.
 2. Clear list of decisions agreed upon.
@@ -226,7 +227,7 @@ def generate_summary_from_text_sync(transcript_text: str) -> MeetingSummary:
 async def health_check():
     return HealthResponse(
         status="healthy",
-        service="VOW AI Meeting Service",
+        service=SERVICE_NAME,
         active_model=PRIMARY_MODEL,
         timestamp=time.time()
     )
