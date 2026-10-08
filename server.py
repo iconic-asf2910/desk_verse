@@ -67,11 +67,13 @@ class MeetingSummary(BaseModel):
 class MeetingProcessResponse(BaseModel):
     status: str = "success"
     transcript: str
+    result: str = "" 
     summary: MeetingSummary
 
 class TranscriptResponse(BaseModel):
     status: str = "success"
     transcript: str
+    result: str = "" 
 
 class SummaryResponse(BaseModel):
     status: str = "success"
@@ -252,8 +254,9 @@ async def process_full_meeting(audio: UploadFile = File(...)):
             return MeetingProcessResponse(
                 status="success",
                 transcript=transcript,
+                result=transcript,  
                 summary=summary
-            )
+            )   
         finally:
             await asyncio.to_thread(delete_remote_file, uploaded_file.name)
 
@@ -282,7 +285,11 @@ async def handle_transcribe(audio: UploadFile = File(...)):
 
         try:
             transcript = await asyncio.to_thread(generate_transcript_sync, uploaded_file)
-            return TranscriptResponse(status="success", transcript=transcript)
+            return TranscriptResponse(
+                status="success",
+                transcript=transcript,
+                result=transcript 
+            )
         finally:
             await asyncio.to_thread(delete_remote_file, uploaded_file.name)
 
