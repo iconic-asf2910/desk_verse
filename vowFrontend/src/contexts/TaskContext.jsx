@@ -1,8 +1,4 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useEffect, useState } from "react";
 
 import useWorkspace from "../hooks/UseWorkspace";
 
@@ -63,11 +59,7 @@ const TaskProvider = ({ children }) => {
 
       const data = await getTasks(workspace.id);
 
-      setTasks(
-        Array.isArray(data)
-          ? data.map(normalizeTask)
-          : []
-      );
+      setTasks(Array.isArray(data) ? data.map(normalizeTask) : []); //checks if its array or not
     } catch (error) {
       setTaskError(error.message);
       setTasks([]);
@@ -97,10 +89,7 @@ const TaskProvider = ({ children }) => {
     const task = await createTask(payload);
     const normalizedTask = normalizeTask(task);
 
-    setTasks((previous) => [
-      ...previous,
-      normalizedTask,
-    ]);
+    setTasks((previous) => [...previous, normalizedTask]);
 
     return normalizedTask;
   };
@@ -119,8 +108,8 @@ const TaskProvider = ({ children }) => {
               ...task,
               ...normalizedTask,
             }
-          : task
-      )
+          : task,
+      ),
     );
 
     return normalizedTask;
@@ -145,8 +134,8 @@ const TaskProvider = ({ children }) => {
               ...task,
               ...normalizedTask,
             }
-          : task
-      )
+          : task,
+      ),
     );
 
     return normalizedTask;
@@ -155,11 +144,7 @@ const TaskProvider = ({ children }) => {
   const removeTask = async (taskId) => {
     await deleteTask(taskId);
 
-    setTasks((previous) =>
-      previous.filter(
-        (task) => task.id !== taskId
-      )
-    );
+    setTasks((previous) => previous.filter((task) => task.id !== taskId));
   };
 
   return (
@@ -180,7 +165,4 @@ const TaskProvider = ({ children }) => {
   );
 };
 
-export {
-  TaskContext,
-  TaskProvider,
-};
+export { TaskContext, TaskProvider };

@@ -40,9 +40,7 @@ const Signup = () => {
             className="mb-5 h-16 w-16 object-contain"
           />
 
-          <h1 className="text-5xl font-semibold tracking-tight">
-            DeskVerse
-          </h1>
+          <h1 className="text-5xl font-semibold tracking-tight">DeskVerse</h1>
 
           <p className="mt-3 text-base leading-6 text-white">
             Securely access your
@@ -88,7 +86,6 @@ const Signup = () => {
                   d="M12 6.24c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.83 3.32 14.63 2.1 12 2.1a9.75 9.75 0 0 0-8.7 5.65l3.24 2.52C7.31 7.96 9.46 6.24 12 6.24Z"
                 />
               </svg>
-
               Continue with Google
             </button>
 
@@ -105,7 +102,6 @@ const Signup = () => {
               >
                 <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.85 10.91.57.1.78-.25.78-.55v-2.13c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.26-1.28-5.26-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18A11.06 11.06 0 0 1 12 6.08c.98 0 1.97.13 2.89.38 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.69.42.36.78 1.07.78 2.16v3.21c0 .31.21.66.79.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
               </svg>
-
               Continue with GitHub
             </button>
           </div>
@@ -169,20 +165,12 @@ const Signup = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
                 >
-                  {showPassword ? (
-                    <EyeOff size={17} />
-                  ) : (
-                    <Eye size={17} />
-                  )}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
-            {error && (
-              <p className="mt-3 text-xs text-red-500">
-                {error}
-              </p>
-            )}
+            {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
 
             <button
               type="submit"

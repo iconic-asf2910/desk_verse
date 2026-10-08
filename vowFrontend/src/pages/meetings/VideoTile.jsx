@@ -1,10 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const VideoTile = ({
-  stream,
-  muted = false,
-  label = "Participant",
-}) => {
+const VideoTile = ({ stream, muted = false, label = "Participant" }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {

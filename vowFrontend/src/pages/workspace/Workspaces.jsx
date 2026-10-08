@@ -86,9 +86,7 @@ const Workspaces = () => {
 
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           {loadingWorkspaces ? (
-            <p className="text-sm text-slate-500">
-              Loading workspaces...
-            </p>
+            <p className="text-sm text-slate-500">Loading workspaces...</p>
           ) : workspaces.length === 0 ? (
             <div className="py-12 text-center">
               <h2 className="text-base font-medium text-slate-800">
@@ -113,9 +111,7 @@ const Workspaces = () => {
                 <button
                   key={workspace.id}
                   type="button"
-                  onClick={() =>
-                    handleWorkspaceClick(workspace)
-                  }
+                  onClick={() => handleWorkspaceClick(workspace)}
                   className="rounded-xl border border-slate-200 p-5 text-left transition hover:border-slate-400 hover:shadow-sm"
                 >
                   <h2 className="text-base font-semibold text-slate-900">
@@ -123,8 +119,7 @@ const Workspaces = () => {
                   </h2>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    {workspace.description ||
-                      "No description provided."}
+                    {workspace.description || "No description provided."}
                   </p>
 
                   <div className="mt-4 text-xs font-medium text-slate-400">
@@ -166,10 +161,7 @@ const Workspaces = () => {
               </div>
             )}
 
-            <form
-              onSubmit={handleCreateWorkspace}
-              className="mt-5 space-y-5"
-            >
+            <form onSubmit={handleCreateWorkspace} className="mt-5 space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Workspace Name
@@ -178,9 +170,7 @@ const Workspaces = () => {
                 <input
                   type="text"
                   value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
-                  }
+                  onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Development Team"
                   required
                   className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100"
@@ -194,9 +184,7 @@ const Workspaces = () => {
 
                 <textarea
                   value={description}
-                  onChange={(event) =>
-                    setDescription(event.target.value)
-                  }
+                  onChange={(event) => setDescription(event.target.value)}
                   placeholder="Describe your workspace"
                   rows={4}
                   className="w-full resize-none rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100"
@@ -217,9 +205,7 @@ const Workspaces = () => {
                   disabled={creatingWorkspace}
                   className="rounded-lg bg-[#111827] px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {creatingWorkspace
-                    ? "Creating..."
-                    : "Create Workspace"}
+                  {creatingWorkspace ? "Creating..." : "Create Workspace"}
                 </button>
               </div>
             </form>

@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import useAuth from "../../hooks/UseAuth";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //useNavigate is used to navigate from one page/route to another , without reloading the website.
   const { login, token } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -16,7 +16,7 @@ const Login = () => {
     if (token) {
       navigate("/dashboard", { replace: true });
     }
-  }, [token, navigate]);
+  }, [token, navigate]); //replace: true means replace the current page in the browser's history instead of adding a new history entry.
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -45,9 +45,7 @@ const Login = () => {
             className="mb-5 h-16 w-16 object-contain"
           />
 
-          <h1 className="text-5xl font-semibold tracking-tight">
-            DeskVerse
-          </h1>
+          <h1 className="text-5xl font-semibold tracking-tight">DeskVerse</h1>
 
           <p className="mt-3 text-base leading-6 text-white">
             Securely access your
@@ -91,7 +89,7 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="****************"
+                  placeholder="enter password"
                   required
                   className="h-11 w-full rounded-md border border-slate-400 bg-[#eeeeff] px-3 pr-11 text-sm text-slate-700 outline-none focus:border-blue-500"
                 />
@@ -106,20 +104,13 @@ const Login = () => {
               </div>
 
               <div className="mt-2 text-right">
-                <button
-                  type="button"
-                  className="text-xs text-[#15155c]"
-                >
+                <button type="button" className="text-xs text-[#15155c]">
                   Forgot Password?
                 </button>
               </div>
             </div>
 
-            {error && (
-              <p className="mt-4 text-sm text-red-500">
-                {error}
-              </p>
-            )}
+            {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
             <button
               type="submit"

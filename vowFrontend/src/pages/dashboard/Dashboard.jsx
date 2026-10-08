@@ -38,7 +38,7 @@ const roomColors = [
   "bg-rose-100 text-rose-600",
 ];
 
-const getRoomStatus = (room, index) => {
+const getRoomStatus = (room) => {
   if (room.status) {
     const status = room.status.toLowerCase();
 
@@ -49,14 +49,6 @@ const getRoomStatus = (room, index) => {
     ) {
       return status;
     }
-  }
-
-  if (index % 3 === 0) {
-    return "active";
-  }
-
-  if (index % 3 === 1) {
-    return "in_meeting";
   }
 
   return "available";
@@ -98,18 +90,16 @@ const Dashboard = () => {
   const [openMenu, setOpenMenu] = useState(null);
 
   const availableRooms = useMemo(() => {
-    return rooms.filter(
-      (room, index) => getRoomStatus(room, index) === "available",
-    );
-  }, [rooms]);
+    return rooms.filter((room) => getRoomStatus(room) === "available");
+  }, [rooms]); //useMemo = "Remember this calculated value and recalculate it only when its dependencies change."
 
   const filteredRooms = useMemo(() => {
-    return rooms.filter((room, index) => {
+    return rooms.filter((room) => {
       const matchesSearch = room.name
         ?.toLowerCase()
-        .includes(search.toLowerCase());
+        .includes(search.toLowerCase());  //.includes() = "does this string contain this text?".
 
-      const status = getRoomStatus(room, index);
+      const status = getRoomStatus(room);
 
       const matchesFilter = roomFilter === "all" || status === roomFilter;
 
@@ -449,6 +439,8 @@ const Dashboard = () => {
                     room.image || roomImages[originalIndex % roomImages.length];
 
                   const color = roomColors[originalIndex % roomColors.length];
+
+                  const status = getRoomStatus(room);
 
                   return (
                     <div

@@ -1,8 +1,4 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useEffect, useState } from "react";
 
 import {
   getWorkspaces,
@@ -16,10 +12,8 @@ const WorkspaceContext = createContext();
 const WorkspaceProvider = ({ children }) => {
   const [workspace, setWorkspace] = useState(null);
   const [workspaces, setWorkspaces] = useState([]);
-  const [loadingWorkspaces, setLoadingWorkspaces] =
-    useState(true);
-  const [workspaceError, setWorkspaceError] =
-    useState("");
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState("");
 
   const loadWorkspaces = async () => {
     try {
@@ -32,25 +26,17 @@ const WorkspaceProvider = ({ children }) => {
 
       setWorkspaces(list);
 
-      const savedId = localStorage.getItem(
-        "deskverseWorkspaceId"
-      );
+      const savedId = localStorage.getItem("deskverseWorkspaceId");
 
       const selected =
-        list.find(
-          (item) =>
-            String(item.id) === String(savedId)
-        ) ||
+        list.find((item) => String(item.id) === String(savedId)) ||
         list[0] ||
-        null;
+        null;  //Previously selected workspace ,if not found ,First workspace ,if none ,null
 
       setWorkspace(selected);
 
       if (selected) {
-        localStorage.setItem(
-          "deskverseWorkspaceId",
-          selected.id
-        );
+        localStorage.setItem("deskverseWorkspaceId", selected.id);
       }
     } catch (error) {
       setWorkspaceError(error.message);
@@ -67,8 +53,7 @@ const WorkspaceProvider = ({ children }) => {
 
   const selectWorkspace = (workspaceId) => {
     const selected = workspaces.find(
-      (item) =>
-        String(item.id) === String(workspaceId)
+      (item) => String(item.id) === String(workspaceId),
     );
 
     if (!selected) {
@@ -77,55 +62,33 @@ const WorkspaceProvider = ({ children }) => {
 
     setWorkspace(selected);
 
-    localStorage.setItem(
-      "deskverseWorkspaceId",
-      selected.id
-    );
+    localStorage.setItem("deskverseWorkspaceId", selected.id);
   };
 
   const addWorkspace = async (workspaceData) => {
     const created = await createWorkspace({
       name: workspaceData.name.trim(),
-      description:
-        workspaceData.description || "",
-    });
+      description: workspaceData.description || "",
+    }); //Sends workspace data to the backend.
 
-    setWorkspaces((previous) => [
-      ...previous,
-      created,
-    ]);
+    setWorkspaces((previous) => [...previous, created]);
 
     setWorkspace(created);
 
-    localStorage.setItem(
-      "deskverseWorkspaceId",
-      created.id
-    );
+    localStorage.setItem("deskverseWorkspaceId", created.id);
 
     return created;
   };
 
-  const editWorkspace = async (
-    workspaceId,
-    data
-  ) => {
-    const updated = await updateWorkspace(
-      workspaceId,
-      data
-    );
+  const editWorkspace = async (workspaceId, data) => {
+    const updated = await updateWorkspace(workspaceId, data);
 
     setWorkspaces((previous) =>
-      previous.map((item) =>
-        item.id === workspaceId
-          ? updated
-          : item
-      )
+      previous.map((item) => (item.id === workspaceId ? updated : item)),
     );
 
     setWorkspace((current) =>
-      current?.id === workspaceId
-        ? updated
-        : current
+      current?.id === workspaceId ? updated : current,
     );
 
     return updated;
@@ -134,9 +97,7 @@ const WorkspaceProvider = ({ children }) => {
   const removeWorkspace = async (workspaceId) => {
     await deleteWorkspace(workspaceId);
 
-    const remaining = workspaces.filter(
-      (item) => item.id !== workspaceId
-    );
+    const remaining = workspaces.filter((item) => item.id !== workspaceId);
 
     setWorkspaces(remaining);
 
@@ -146,14 +107,9 @@ const WorkspaceProvider = ({ children }) => {
       setWorkspace(next);
 
       if (next) {
-        localStorage.setItem(
-          "deskverseWorkspaceId",
-          next.id
-        );
+        localStorage.setItem("deskverseWorkspaceId", next.id);
       } else {
-        localStorage.removeItem(
-          "deskverseWorkspaceId"
-        );
+        localStorage.removeItem("deskverseWorkspaceId");
       }
     }
   };
@@ -179,7 +135,4 @@ const WorkspaceProvider = ({ children }) => {
   );
 };
 
-export {
-  WorkspaceContext,
-  WorkspaceProvider,
-};
+export { WorkspaceContext, WorkspaceProvider };

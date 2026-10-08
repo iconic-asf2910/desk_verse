@@ -79,9 +79,7 @@ const CreateMeeting = () => {
 
   const removeParticipant = (participant) => {
     setParticipants((previousParticipants) =>
-      previousParticipants.filter(
-        (item) => item !== participant
-      )
+      previousParticipants.filter((item) => item !== participant),
     );
   };
 
@@ -128,9 +126,7 @@ const CreateMeeting = () => {
         endTime: new Date(endTime).toISOString(),
       };
 
-      const createdMeeting = await createMeeting(
-        meetingData
-      );
+      const createdMeeting = await createMeeting(meetingData);
 
       navigate(`/meetings/${createdMeeting.id}`);
     } catch (error) {
@@ -170,10 +166,7 @@ const CreateMeeting = () => {
             </div>
           )}
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Meeting Title
@@ -182,9 +175,7 @@ const CreateMeeting = () => {
               <input
                 type="text"
                 value={title}
-                onChange={(event) =>
-                  setTitle(event.target.value)
-                }
+                onChange={(event) => setTitle(event.target.value)}
                 placeholder="Enter meeting title"
                 required
                 className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -198,9 +189,7 @@ const CreateMeeting = () => {
 
               <textarea
                 value={description}
-                onChange={(event) =>
-                  setDescription(event.target.value)
-                }
+                onChange={(event) => setDescription(event.target.value)}
                 placeholder="Enter meeting description"
                 rows="4"
                 className="w-full resize-none rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -223,21 +212,14 @@ const CreateMeeting = () => {
               ) : (
                 <select
                   value={roomId}
-                  onChange={(event) =>
-                    setRoomId(event.target.value)
-                  }
+                  onChange={(event) => setRoomId(event.target.value)}
                   required
                   className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
-                  <option value="">
-                    Select a room
-                  </option>
+                  <option value="">Select a room</option>
 
                   {rooms.map((room) => (
-                    <option
-                      key={room.id}
-                      value={room.id}
-                    >
+                    <option key={room.id} value={room.id}>
                       {room.name}
                     </option>
                   ))}
@@ -254,9 +236,7 @@ const CreateMeeting = () => {
                 <input
                   type="datetime-local"
                   value={startTime}
-                  onChange={(event) =>
-                    setStartTime(event.target.value)
-                  }
+                  onChange={(event) => setStartTime(event.target.value)}
                   required
                   className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -270,9 +250,7 @@ const CreateMeeting = () => {
                 <input
                   type="datetime-local"
                   value={endTime}
-                  onChange={(event) =>
-                    setEndTime(event.target.value)
-                  }
+                  onChange={(event) => setEndTime(event.target.value)}
                   required
                   className="w-full rounded-md border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -288,9 +266,7 @@ const CreateMeeting = () => {
                 <input
                   type="text"
                   value={participantInput}
-                  onChange={(event) =>
-                    setParticipantInput(event.target.value)
-                  }
+                  onChange={(event) => setParticipantInput(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -323,9 +299,7 @@ const CreateMeeting = () => {
 
                       <button
                         type="button"
-                        onClick={() =>
-                          removeParticipant(participant)
-                        }
+                        onClick={() => removeParticipant(participant)}
                         className="text-xs font-medium text-red-500 hover:text-red-600"
                       >
                         Remove
@@ -347,17 +321,10 @@ const CreateMeeting = () => {
 
               <button
                 type="submit"
-                disabled={
-                  loading ||
-                  loadingRooms ||
-                  !workspace ||
-                  !roomId
-                }
+                disabled={loading || loadingRooms || !workspace || !roomId}
                 className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading
-                  ? "Creating..."
-                  : "Create Meeting"}
+                {loading ? "Creating..." : "Create Meeting"}
               </button>
             </div>
           </form>

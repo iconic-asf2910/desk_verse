@@ -1,8 +1,4 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useEffect, useState } from "react";
 import useWorkspace from "../hooks/UseWorkspace";
 import useAuth from "../hooks/UseAuth";
 import {
@@ -19,10 +15,8 @@ const PollProvider = ({ children }) => {
   const { user } = useAuth();
 
   const [polls, setPolls] = useState([]);
-  const [loadingPolls, setLoadingPolls] =
-    useState(false);
-  const [pollError, setPollError] =
-    useState("");
+  const [loadingPolls, setLoadingPolls] = useState(false);
+  const [pollError, setPollError] = useState("");
 
   const loadPolls = async () => {
     if (!workspace?.id) {
@@ -34,13 +28,9 @@ const PollProvider = ({ children }) => {
       setLoadingPolls(true);
       setPollError("");
 
-      const data = await getPolls(
-        workspace.id
-      );
+      const data = await getPolls(workspace.id);
 
-      setPolls(
-        Array.isArray(data) ? data : []
-      );
+      setPolls(Array.isArray(data) ? data : []);
     } catch (error) {
       setPollError(error.message);
       setPolls([]);
@@ -60,62 +50,37 @@ const PollProvider = ({ children }) => {
     expiresAt = "",
   }) => {
     if (!workspace?.id) {
-      throw new Error(
-        "No workspace selected."
-      );
+      throw new Error("No workspace selected.");
     }
 
     const poll = await createPoll({
       workspaceId: workspace.id,
       question: question.trim(),
-      options: options.map((option) =>
-        option.trim()
-      ),
+      options: options.map((option) => option.trim()),
       eligibleUsers,
       expiresAt,
     });
 
-    setPolls((previous) => [
-      poll,
-      ...previous,
-    ]);
+    setPolls((previous) => [poll, ...previous]);
 
     return poll;
   };
 
-  const votePollOption = async (
-    pollId,
-    option
-  ) => {
-    const updated = await votePoll(
-      pollId,
-      option
-    );
+  const votePollOption = async (pollId, option) => {
+    const updated = await votePoll(pollId, option);
 
     setPolls((previous) =>
-      previous.map((poll) =>
-        poll.id === pollId
-          ? updated
-          : poll
-      )
+      previous.map((poll) => (poll.id === pollId ? updated : poll)),
     );
 
     return updated;
   };
 
-  const closePollOption = async (
-    pollId
-  ) => {
-    const closed = await closePoll(
-      pollId
-    );
+  const closePollOption = async (pollId) => {
+    const closed = await closePoll(pollId);
 
     setPolls((previous) =>
-      previous.map((poll) =>
-        poll.id === pollId
-          ? closed
-          : poll
-      )
+      previous.map((poll) => (poll.id === pollId ? closed : poll)),
     );
 
     return closed;
@@ -126,12 +91,7 @@ const PollProvider = ({ children }) => {
       return false;
     }
 
-    return Boolean(
-      poll.votes?.some(
-        (vote) =>
-          vote.userId === user.id
-      )
-    );
+    return Boolean(poll.votes?.some((vote) => vote.userId === user.id));
   };
 
   const getUserVote = (poll) => {
@@ -139,12 +99,7 @@ const PollProvider = ({ children }) => {
       return null;
     }
 
-    return (
-      poll.votes?.find(
-        (vote) =>
-          vote.userId === user.id
-      )?.option || null
-    );
+    return poll.votes?.find((vote) => vote.userId === user.id)?.option || null;
   };
 
   return (
@@ -166,7 +121,4 @@ const PollProvider = ({ children }) => {
   );
 };
 
-export {
-  PollContext,
-  PollProvider,
-};
+export { PollContext, PollProvider };
