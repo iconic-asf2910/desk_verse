@@ -1,0 +1,17 @@
+{
+  "platform_name": "VOW (Virtual Organized World)",
+  "purpose": "Virtual-office and collaboration platform for distributed teams combining virtual workspaces, real-time communication, meetings, task boards, polls, and analytics.",
+  "roles": {
+    "Manager": "Head of organization. Creates and manages virtual offices, manages users and roles, customizes layouts/rooms/themes, and assigns team tasks.",
+    "Supervisor": "Team lead. Monitors workspace analytics (attendance, engagement, activity), provides instructions, and assigns individual tasks.",
+    "Team Member": "Joins workspaces, moves across rooms, communicates via video/voice/text, shares screens, collaborates on documents, attends meetings, and submits feedback."
+  },
+  "modules_and_workflows": {
+    "rooms_and_presence": "Users enter rooms inside a workspace. WebSocket maintains real-time presence (online, in a meeting, available).",
+    "meetings_and_webrtc": "Meetings can be scheduled or joined via room/shared links. Go backend handles WebRTC signaling (offer/answer/ICE), while audio/video/screen-sharing is peer-to-peer.",
+    "project_management": "Follows a Kanban-style workflow: TODO -> IN PROGRESS -> COMPLETED. Managers and Supervisors assign tasks.",
+    "polls_and_feedback": "Managers/Supervisors create polls with questions and options. Eligible users vote, and results are computed and displayed.",
+    "analytics": "Tracks workspace events including room joins, leaves, meeting attendance, and engagement metrics."
+  },
+  "support_contact": "support@vow-world.com"
+}
