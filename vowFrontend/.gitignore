@@ -6,12 +6,22 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+.env
 node_modules
 dist
 dist-ssr
 *.local
 
+/internal/
+/main.go
+/go.mod
+/go.sum
+/.envcd
+# Backend files
+
+/.env.example
+/internal/
+.env
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,20 +1,78 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
+
+import Home from "../pages/home/Home";
 import Login from "../pages/auth/Login";
-import Dashboard from "../pages/dashboard/Dashboard";
 import Signup from "../pages/auth/Signup";
+
+import MainLayout from "../components/layout/MainLayout";
+
+import ProtectedRoute from "./ProtectedRoute";
+
+import Dashboard from "../pages/dashboard/Dashboard";
 import Profile from "../pages/profile/Profile";
+import Workspaces from "../pages/workspace/Workspaces";
+import WorkspaceDetails from "../pages/workspace/WorkspaceDetails";
+
+import Rooms from "../pages/room/Rooms";
+import RoomDetails from "../pages/room/RoomDetails";
+
+import Meetings from "../pages/meetings/Meetings";
+import CreateMeeting from "../pages/meetings/CreateMeeting";
+import MeetingDetails from "../pages/meetings/MeetingDetails";
+import JoinMeeting from "../pages/meetings/JoinMeeting";
+
+import Chat from "../pages/chat/Chat";
+import Tasks from "../pages/tasks/Tasks";
+import Polls from "../pages/polls/Polls";
+import Analytics from "../pages/analytics/Analytics";
+import Activities from "../pages/activities/Activities";
+import Notifications from "../pages/notifications/Notifications";
 
 const AppRoutes = () => {
   return (
-    <div>
-      <Routes>
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/signup" element={<Signup />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="/profile" element={<Profile />} />
+
+          <Route path="/workspaces" element={<Workspaces />} />
+
+          <Route path="/workspaces/:id" element={<WorkspaceDetails />} />
+
+          <Route path="/rooms" element={<Rooms />} />
+
+          <Route path="/rooms/:id" element={<RoomDetails />} />
+
+          <Route path="/meetings" element={<Meetings />} />
+
+          <Route path="/meetings/create" element={<CreateMeeting />} />
+
+          <Route path="/meetings/:id" element={<MeetingDetails />} />
+
+          <Route path="/meetings/:id/join" element={<JoinMeeting />} />
+
+          <Route path="/chat" element={<Chat />} />
+
+          <Route path="/tasks" element={<Tasks />} />
+
+          <Route path="/polls" element={<Polls />} />
+
+          <Route path="/analytics" element={<Analytics />} />
+
+          <Route path="/activities" element={<Activities />} />
+
+          <Route path="/notifications" element={<Notifications />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 };
 
