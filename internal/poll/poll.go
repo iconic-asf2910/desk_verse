@@ -129,6 +129,10 @@ func CreatePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -197,6 +201,10 @@ func ListPolls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -239,12 +247,16 @@ func GetPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var poll models.Poll
 	err := col.FindOne(ctx, bson.M{"_id": parseObjectID(id)}).Decode(&poll)
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
 		err = col.FindOne(ctx, bson.M{"_id": id}).Decode(&poll)
 	}
 	if err != nil {
@@ -295,13 +307,17 @@ func VoteOnPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var poll models.Poll
 	filter := bson.M{"_id": parseObjectID(id)}
 	err := col.FindOne(ctx, filter).Decode(&poll)
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
 		err = col.FindOne(ctx, bson.M{"_id": id}).Decode(&poll)
 	}
 	if err != nil {
@@ -401,13 +417,17 @@ func HandlePollClose(w http.ResponseWriter, r *http.Request) {
 	}
 
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var poll models.Poll
 	filter := bson.M{"_id": parseObjectID(id)}
 	err := col.FindOne(ctx, filter).Decode(&poll)
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
 		err = col.FindOne(ctx, bson.M{"_id": id}).Decode(&poll)
 	}
 	if err != nil {
@@ -488,7 +508,11 @@ func getPollIDFromPath(r *http.Request) string {
 	path := r.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) >= 2 {
-		return parts[len(parts)-1]
+		last := parts[len(parts)-1]
+		if last == "close" && len(parts) >= 3 {
+			return parts[len(parts)-2]
+		}
+		return last
 	}
 	return ""
 }

@@ -145,6 +145,10 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	status := req.Status
@@ -190,6 +194,10 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	filter := bson.M{"workspaceId": workspaceID}
@@ -229,11 +237,15 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB error", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var task models.Task
 	err := col.FindOne(ctx, bson.M{"_id": parseObjectID(id)}).Decode(&task)
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
 		err = col.FindOne(ctx, bson.M{"_id": id}).Decode(&task)
 	}
 	if err != nil {
@@ -284,6 +296,10 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var task models.Task
@@ -358,6 +374,10 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	col := collection()
+	if col == nil {
+		http.Error(w, "DB collection not available", http.StatusInternalServerError)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var task models.Task
