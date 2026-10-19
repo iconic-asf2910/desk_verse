@@ -12,13 +12,25 @@ import (
 	"github.com/iconic-asf2910/vow/internal/auth"
 	"github.com/iconic-asf2910/vow/internal/db"
 	"github.com/iconic-asf2910/vow/internal/meeting"
-	"github.com/iconic-asf2910/vow/internal/middleware"
 	"github.com/iconic-asf2910/vow/internal/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin:     func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return true
+		}
+
+		allowedOrigins := map[string]bool{
+			"http://localhost:5173": true,
+		}
+
+		return allowedOrigins[origin] ||
+			strings.HasSuffix(origin, ".vercel.app") &&
+				strings.HasPrefix(origin, "https://")
+	},
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
@@ -52,88 +64,95 @@ func NewHub() *Hub {
 func (h *Hub) register(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
 	if h.clients[client.meeting] == nil {
 		h.clients[client.meeting] = make(map[*Client]bool)
 	}
+
 	h.clients[client.meeting][client] = true
 }
 
 func (h *Hub) unregister(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
 	if h.clients[client.meeting] != nil {
 		delete(h.clients[client.meeting], client)
+
 		if len(h.clients[client.meeting]) == 0 {
 			delete(h.clients, client.meeting)
 		}
 	}
 }
 
-func (h *Hub) broadcast(meeting string, msg Message, exclude *Client) {
+func (h *Hub) broadcast(meetingID string, msg Message, exclude *Client) {
 	h.mu.RLock()
-	clients := make([]*Client, 0, len(h.clients[meeting]))
-	for c := range h.clients[meeting] {
-		if c != exclude {
-			clients = append(clients, c)
+	clients := make([]*Client, 0, len(h.clients[meetingID]))
+
+	for client := range h.clients[meetingID] {
+		if client != exclude {
+			clients = append(clients, client)
 		}
 	}
 	h.mu.RUnlock()
 
-	for _, c := range clients {
-		c.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-		err := c.conn.WriteJSON(msg)
-		if err != nil {
-			c.conn.Close()
-			h.unregister(c)
+	for _, client := range clients {
+		client.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+
+		if err := client.conn.WriteJSON(msg); err != nil {
+			client.conn.Close()
+			h.unregister(client)
 		}
 	}
 }
 
-func (h *Hub) sendToTarget(meeting string, msg Message, targetUserID string) {
+func (h *Hub) sendToTarget(meetingID string, msg Message, targetUserID string) {
 	h.mu.RLock()
 	targetClients := make([]*Client, 0)
-	for c := range h.clients[meeting] {
-		if c.userID == targetUserID {
-			targetClients = append(targetClients, c)
+
+	for client := range h.clients[meetingID] {
+		if client.userID == targetUserID {
+			targetClients = append(targetClients, client)
 		}
 	}
 	h.mu.RUnlock()
 
-	for _, c := range targetClients {
-		c.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-		err := c.conn.WriteJSON(msg)
-		if err != nil {
-			c.conn.Close()
-			h.unregister(c)
+	for _, client := range targetClients {
+		client.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+
+		if err := client.conn.WriteJSON(msg); err != nil {
+			client.conn.Close()
+			h.unregister(client)
 		}
 	}
 }
 
 func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
 	userID := ""
 
+	authHeader := r.Header.Get("Authorization")
 	if authHeader != "" {
-		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == "Bearer" {
+		parts := strings.SplitN(authHeader, " ", 2)
+
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
 			claims := &auth.Claims{}
 			token, err := auth.ParseToken(parts[1], claims)
+
 			if err == nil && token.Valid {
 				userID = claims.UserID
-				r = r.WithContext(middleware.AddUserToContext(r.Context(), userID))
 			}
 		}
 	}
 
 	if userID == "" {
-		qs := r.URL.Query()
-		tokenStr := qs.Get("token")
-		if tokenStr != "" {
+		tokenString := r.URL.Query().Get("token")
+
+		if tokenString != "" {
 			claims := &auth.Claims{}
-			token, err := auth.ParseToken(tokenStr, claims)
+			token, err := auth.ParseToken(tokenString, claims)
+
 			if err == nil && token.Valid {
 				userID = claims.UserID
-				r = r.WithContext(middleware.AddUserToContext(r.Context(), userID))
 			}
 		}
 	}
@@ -143,47 +162,69 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := r.URL.Path
-	parts := strings.Split(path, "/")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	meetingID := ""
-	for i, p := range parts {
-		if p == "meetings" && i+1 < len(parts) {
-			meetingID = parts[i+1]
+
+	for i, part := range pathParts {
+		if part == "meetings" && i+1 < len(pathParts) {
+			meetingID = pathParts[i+1]
 			break
 		}
 	}
-	if meetingID == "" || strings.Contains(meetingID, "/") {
+
+	if meetingID == "" {
 		http.Error(w, "Meeting ID required", http.StatusBadRequest)
 		return
 	}
 
 	if db.DB == nil {
 		if err := db.Connect(); err != nil {
-			http.Error(w, "DB error", http.StatusInternalServerError)
+			http.Error(w, "Database connection failed", http.StatusInternalServerError)
 			return
 		}
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
 	col := db.DB.Collection("meetings")
 	var mtg models.Meeting
-	var objID bson.ObjectID
-	var findErr error
-	objID, findErr = bson.ObjectIDFromHex(meetingID)
-	if findErr == nil {
-		findErr = col.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&mtg)
-	}
-	if findErr != nil {
-		findErr = col.FindOne(context.Background(), bson.M{"meetingCode": meetingID}).Decode(&mtg)
-	}
-	if findErr == nil {
-		if !meeting.IsUserAuthorizedForMeeting(&mtg, userID) {
-			http.Error(w, "Access denied", http.StatusForbidden)
-			return
-		}
+
+	objectID, err := bson.ObjectIDFromHex(meetingID)
+
+	if err == nil {
+		err = col.FindOne(ctx, bson.M{"_id": objectID}).Decode(&mtg)
 	} else {
+		err = col.FindOne(ctx, bson.M{"meetingCode": meetingID}).Decode(&mtg)
+	}
+
+	if err != nil {
 		http.Error(w, "Meeting not found", http.StatusNotFound)
 		return
 	}
+
+	authorized := meeting.IsUserAuthorizedForMeeting(&mtg, userID)
+
+	if !authorized {
+		for _, request := range mtg.JoinRequests {
+			if request.UserID == userID && request.Status == "approved" {
+				authorized = true
+				break
+			}
+		}
+	}
+
+	if !authorized {
+		http.Error(w, "Access denied: host approval required", http.StatusForbidden)
+		return
+	}
+
+	canonicalMeetingID := mtg.ID.Hex()
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -193,9 +234,10 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client := &Client{
 		conn:    conn,
 		userID:  userID,
-		meeting: meetingID,
+		meeting: canonicalMeetingID,
 		hub:     hub,
 	}
+
 	hub.register(client)
 
 	defer func() {
@@ -210,6 +252,7 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		}
 
 		var msg Message
+
 		if err := json.Unmarshal(raw, &msg); err != nil {
 			continue
 		}
@@ -217,17 +260,23 @@ func HandleWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		switch msg.Type {
 		case "join":
 			msg.UserID = userID
-			hub.broadcast(meetingID, msg, client)
+			msg.Meeting = canonicalMeetingID
+			hub.broadcast(canonicalMeetingID, msg, client)
+
 		case "offer", "answer", "ice":
 			msg.UserID = userID
+			msg.Meeting = canonicalMeetingID
+
 			if msg.Target != "" {
-				hub.sendToTarget(meetingID, msg, msg.Target)
+				hub.sendToTarget(canonicalMeetingID, msg, msg.Target)
 			} else {
-				hub.broadcast(meetingID, msg, client)
+				hub.broadcast(canonicalMeetingID, msg, client)
 			}
+
 		case "leave":
 			msg.UserID = userID
-			hub.broadcast(meetingID, msg, client)
+			msg.Meeting = canonicalMeetingID
+			hub.broadcast(canonicalMeetingID, msg, client)
 		}
 	}
 }

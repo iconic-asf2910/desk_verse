@@ -67,61 +67,62 @@ func getUserID(r *http.Request) string {
 	if val == nil {
 		return ""
 	}
-	if s, ok := val.(string); ok {
-		return s
+	id, ok := val.(string)
+	if !ok {
+		return ""
 	}
-	return ""
+	return id
 }
 
 func getMeetingIDFromPath(r *http.Request) string {
-	path := r.URL.Path
-	parts := strings.Split(path, "/")
-	if len(parts) >= 2 {
-		return parts[len(parts)-1]
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 3 {
+		return ""
 	}
-	return ""
+	return parts[2]
 }
 
 func IsUserAuthorizedForMeeting(m *models.Meeting, userID string) bool {
 	if m == nil || userID == "" {
 		return false
 	}
-	return isUserInWorkspace(userID, m.WorkspaceID)
+	if isUserInWorkspace(userID, m.WorkspaceID) {
+		return true
+	}
+	for _, request := range m.JoinRequests {
+		if request.UserID == userID && request.Status == "approved" {
+			return true
+		}
+	}
+	return false
 }
 
 func isUserInWorkspace(userID string, workspaceID string) bool {
 	if workspaceID == "" || userID == "" {
 		return false
 	}
+
 	col := workspaceCollection()
 	if col == nil {
 		return false
 	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	objID, err := bson.ObjectIDFromHex(workspaceID)
-	if err != nil {
-		var ws models.Workspace
-		err = col.FindOne(ctx, bson.M{"_id": workspaceID}).Decode(&ws)
-		if err != nil {
-			return false
-		}
-		for _, m := range ws.Members {
-			if m == userID {
-				return true
-			}
-		}
-		return ws.OwnerID == userID
+	filter := bson.M{"_id": workspaceID}
+	if err == nil {
+		filter = bson.M{"_id": objID}
 	}
 
 	var ws models.Workspace
-	err = col.FindOne(ctx, bson.M{"_id": objID}).Decode(&ws)
-	if err != nil {
+	if err := col.FindOne(ctx, filter).Decode(&ws); err != nil {
 		return false
 	}
-	for _, m := range ws.Members {
-		if m == userID {
+
+	for _, member := range ws.Members {
+		if member == userID {
 			return true
 		}
 	}
@@ -132,23 +133,28 @@ func roomExists(roomID string, workspaceID string) bool {
 	if roomID == "" || workspaceID == "" {
 		return false
 	}
+
 	col := roomCollection()
 	if col == nil {
 		return false
 	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	objID, err := bson.ObjectIDFromHex(roomID)
-	if err != nil {
-		var rm models.Room
-		err = col.FindOne(ctx, bson.M{"_id": roomID, "workspaceId": workspaceID}).Decode(&rm)
-		return err == nil
+	roomObjectID, err := bson.ObjectIDFromHex(roomID)
+	workspaceObjectID, workspaceErr := bson.ObjectIDFromHex(workspaceID)
+
+	filter := bson.M{"_id": roomID, "workspaceId": workspaceID}
+	if err == nil {
+		filter["_id"] = roomObjectID
+	}
+	if workspaceErr == nil {
+		filter["workspaceId"] = workspaceObjectID
 	}
 
-	var rm models.Room
-	err = col.FindOne(ctx, bson.M{"_id": objID, "workspaceId": workspaceID}).Decode(&rm)
-	return err == nil
+	var room models.Room
+	return col.FindOne(ctx, filter).Decode(&room) == nil
 }
 
 func generateMeetingCode() (string, error) {
@@ -161,6 +167,17 @@ func generateMeetingCode() (string, error) {
 
 func generateMeetingLink(meetingCode string) string {
 	return fmt.Sprintf("https://vow.app/meeting/%s", meetingCode)
+}
+
+func ensureDatabase(w http.ResponseWriter) bool {
+	if db.DB != nil {
+		return true
+	}
+	if err := db.Connect(); err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return false
+	}
+	return db.DB != nil
 }
 
 func CreateMeeting(w http.ResponseWriter, r *http.Request) {
@@ -185,33 +202,19 @@ func CreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimSpace(req.WorkspaceID) == "" {
-		http.Error(w, "workspaceId is required", http.StatusBadRequest)
+	if strings.TrimSpace(req.WorkspaceID) == "" ||
+		strings.TrimSpace(req.RoomID) == "" ||
+		strings.TrimSpace(req.Title) == "" {
+		http.Error(w, "workspaceId, roomId, and title are required", http.StatusBadRequest)
 		return
 	}
 
-	if strings.TrimSpace(req.RoomID) == "" {
-		http.Error(w, "roomId is required", http.StatusBadRequest)
+	if req.StartTime.IsZero() || req.EndTime.IsZero() || req.EndTime.Before(req.StartTime) {
+		http.Error(w, "Valid startTime and endTime are required", http.StatusBadRequest)
 		return
 	}
 
-	if strings.TrimSpace(req.Title) == "" {
-		http.Error(w, "title is required", http.StatusBadRequest)
-		return
-	}
-
-	if req.StartTime.IsZero() {
-		http.Error(w, "startTime is required", http.StatusBadRequest)
-		return
-	}
-
-	if req.EndTime.IsZero() {
-		http.Error(w, "endTime is required", http.StatusBadRequest)
-		return
-	}
-
-	if req.EndTime.Before(req.StartTime) {
-		http.Error(w, "endTime must be after startTime", http.StatusBadRequest)
+	if !ensureDatabase(w) {
 		return
 	}
 
@@ -225,56 +228,49 @@ func CreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	meetingCode, err := generateMeetingCode()
+	code, err := generateMeetingCode()
 	if err != nil {
 		http.Error(w, "Failed to generate meeting code", http.StatusInternalServerError)
 		return
 	}
-
-	if db.DB == nil {
-		if err := db.Connect(); err != nil {
-			http.Error(w, "Database connection error", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	participants := req.Participants
 	if participants == nil {
 		participants = []string{}
 	}
 
-	meeting := &models.Meeting{
+	mtg := &models.Meeting{
 		WorkspaceID:  req.WorkspaceID,
 		RoomID:       req.RoomID,
-		Title:        req.Title,
+		Title:        strings.TrimSpace(req.Title),
 		Description:  req.Description,
 		CreatedBy:    userID,
 		Participants: participants,
 		StartTime:    req.StartTime,
 		EndTime:      req.EndTime,
-		MeetingCode:  meetingCode,
-		MeetingLink:  generateMeetingLink(meetingCode),
+		MeetingCode:  code,
+		MeetingLink:  generateMeetingLink(code),
 		Status:       "scheduled",
-		CreatedAt:    time.Now(),
+		CreatedAt:    time.Now().UTC(),
+		JoinRequests: []models.MeetingJoinRequest{},
 	}
 
-	col := collection()
-	result, err := col.InsertOne(ctx, meeting)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := collection().InsertOne(ctx, mtg)
 	if err != nil {
 		http.Error(w, "Failed to create meeting", http.StatusInternalServerError)
 		return
 	}
 
-	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
-		meeting.ID = oid
+	if id, ok := result.InsertedID.(bson.ObjectID); ok {
+		mtg.ID = id
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(meeting)
+	_ = json.NewEncoder(w).Encode(mtg)
 }
 
 func ListMeetings(w http.ResponseWriter, r *http.Request) {
@@ -290,37 +286,32 @@ func ListMeetings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !ensureDatabase(w) {
+		return
+	}
 	if !isUserInWorkspace(userID, workspaceID) {
 		http.Error(w, "Access denied: not a member of workspace", http.StatusForbidden)
 		return
 	}
 
-	if db.DB == nil {
-		if err := db.Connect(); err != nil {
-			http.Error(w, "Database connection error", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	col := collection()
-	cursor, err := col.Find(ctx, bson.M{"workspaceId": workspaceID})
+	cursor, err := collection().Find(ctx, bson.M{"workspaceId": workspaceID})
 	if err != nil {
 		http.Error(w, "Failed to list meetings", http.StatusInternalServerError)
 		return
 	}
 	defer cursor.Close(ctx)
 
-	var meetings []models.Meeting
+	meetings := []models.Meeting{}
 	if err := cursor.All(ctx, &meetings); err != nil {
 		http.Error(w, "Failed to read meetings", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(meetings)
+	_ = json.NewEncoder(w).Encode(meetings)
 }
 
 func GetMeeting(w http.ResponseWriter, r *http.Request) {
@@ -331,42 +322,32 @@ func GetMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := getMeetingIDFromPath(r)
-	if id == "" {
-		http.Error(w, "Meeting ID required", http.StatusBadRequest)
-		return
-	}
-
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		http.Error(w, "Invalid meeting ID", http.StatusBadRequest)
 		return
 	}
 
-	if db.DB == nil {
-		if err := db.Connect(); err != nil {
-			http.Error(w, "Database connection error", http.StatusInternalServerError)
-			return
-		}
+	if !ensureDatabase(w) {
+		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	col := collection()
-	var meeting models.Meeting
-	err = col.FindOne(ctx, bson.M{"_id": objID}).Decode(&meeting)
-	if err != nil {
+	var mtg models.Meeting
+	if err := collection().FindOne(ctx, bson.M{"_id": objID}).Decode(&mtg); err != nil {
 		http.Error(w, "Meeting not found", http.StatusNotFound)
 		return
 	}
 
-	if !isUserInWorkspace(userID, meeting.WorkspaceID) {
-		http.Error(w, "Access denied: not a member of workspace", http.StatusForbidden)
+	if !IsUserAuthorizedForMeeting(&mtg, userID) && mtg.CreatedBy != userID {
+		http.Error(w, "Access denied: request approval to join this meeting", http.StatusForbidden)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(meeting)
+	_ = json.NewEncoder(w).Encode(mtg)
 }
 
 func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
@@ -376,13 +357,7 @@ func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := getMeetingIDFromPath(r)
-	if id == "" {
-		http.Error(w, "Meeting ID required", http.StatusBadRequest)
-		return
-	}
-
-	objID, err := bson.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(getMeetingIDFromPath(r))
 	if err != nil {
 		http.Error(w, "Invalid meeting ID", http.StatusBadRequest)
 		return
@@ -402,33 +377,27 @@ func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if db.DB == nil {
-		if err := db.Connect(); err != nil {
-			http.Error(w, "Database connection error", http.StatusInternalServerError)
-			return
-		}
+	if !ensureDatabase(w) {
+		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	col := collection()
-	var meeting models.Meeting
-	err = col.FindOne(ctx, bson.M{"_id": objID}).Decode(&meeting)
-	if err != nil {
+	var mtg models.Meeting
+	if err := collection().FindOne(ctx, bson.M{"_id": objID}).Decode(&mtg); err != nil {
 		http.Error(w, "Meeting not found", http.StatusNotFound)
 		return
 	}
 
-	if !isUserInWorkspace(userID, meeting.WorkspaceID) {
-		http.Error(w, "Access denied: not a member of workspace", http.StatusForbidden)
+	if mtg.CreatedBy != userID {
+		http.Error(w, "Only the meeting creator can update it", http.StatusForbidden)
 		return
 	}
 
 	update := bson.M{}
-
 	if strings.TrimSpace(req.Title) != "" {
-		update["title"] = req.Title
+		update["title"] = strings.TrimSpace(req.Title)
 	}
 	if req.Description != "" {
 		update["description"] = req.Description
@@ -442,12 +411,18 @@ func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
 	if !req.EndTime.IsZero() {
 		update["endTime"] = req.EndTime
 	}
-	if req.StartTime.IsZero() && req.EndTime.IsZero() {
-	} else if !req.StartTime.IsZero() && !req.EndTime.IsZero() {
-		if req.EndTime.Before(req.StartTime) {
-			http.Error(w, "endTime must be after startTime", http.StatusBadRequest)
-			return
-		}
+
+	start := mtg.StartTime
+	end := mtg.EndTime
+	if !req.StartTime.IsZero() {
+		start = req.StartTime
+	}
+	if !req.EndTime.IsZero() {
+		end = req.EndTime
+	}
+	if end.Before(start) {
+		http.Error(w, "endTime must be after startTime", http.StatusBadRequest)
+		return
 	}
 
 	validStatuses := map[string]bool{
@@ -458,26 +433,25 @@ func UpdateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Status != "" {
 		if !validStatuses[req.Status] {
-			http.Error(w, "Invalid status. Must be: scheduled, active, completed, or cancelled", http.StatusBadRequest)
+			http.Error(w, "Invalid meeting status", http.StatusBadRequest)
 			return
 		}
 		update["status"] = req.Status
 	}
 
 	if len(update) == 0 {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"no changes"}`))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"no changes"}`))
 		return
 	}
 
-	_, err = col.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": update})
-	if err != nil {
+	if _, err := collection().UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": update}); err != nil {
 		http.Error(w, "Failed to update meeting", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"updated"}`))
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write([]byte(`{"status":"updated"}`))
 }
 
 func DeleteMeeting(w http.ResponseWriter, r *http.Request) {
@@ -487,51 +461,182 @@ func DeleteMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := getMeetingIDFromPath(r)
-	if id == "" {
-		http.Error(w, "Meeting ID required", http.StatusBadRequest)
-		return
-	}
-
-	objID, err := bson.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(getMeetingIDFromPath(r))
 	if err != nil {
 		http.Error(w, "Invalid meeting ID", http.StatusBadRequest)
 		return
 	}
 
-	if db.DB == nil {
-		if err := db.Connect(); err != nil {
-			http.Error(w, "Database connection error", http.StatusInternalServerError)
-			return
-		}
+	if !ensureDatabase(w) {
+		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	col := collection()
-	var meeting models.Meeting
-	err = col.FindOne(ctx, bson.M{"_id": objID}).Decode(&meeting)
-	if err != nil {
+	var mtg models.Meeting
+	if err := collection().FindOne(ctx, bson.M{"_id": objID}).Decode(&mtg); err != nil {
 		http.Error(w, "Meeting not found", http.StatusNotFound)
 		return
 	}
 
-	if !isUserInWorkspace(userID, meeting.WorkspaceID) {
-		http.Error(w, "Access denied: not a member of workspace", http.StatusForbidden)
+	if mtg.CreatedBy != userID {
+		http.Error(w, "Only the meeting creator can delete it", http.StatusForbidden)
 		return
 	}
 
-	if meeting.CreatedBy != userID {
-		http.Error(w, "Access denied: Only creator can delete meeting", http.StatusForbidden)
-		return
-	}
-
-	_, err = col.DeleteOne(ctx, bson.M{"_id": objID})
-	if err != nil {
+	if _, err := collection().DeleteOne(ctx, bson.M{"_id": objID}); err != nil {
 		http.Error(w, "Failed to delete meeting", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func HandleMeetingJoinRequests(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 4 || parts[0] != "api" || parts[1] != "meetings" || parts[3] != "join-requests" {
+		http.Error(w, "Invalid meeting request path", http.StatusBadRequest)
+		return
+	}
+
+	objID, err := bson.ObjectIDFromHex(parts[2])
+	if err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusBadRequest)
+		return
+	}
+
+	if !ensureDatabase(w) {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	col := collection()
+	var mtg models.Meeting
+	if err := col.FindOne(ctx, bson.M{"_id": objID}).Decode(&mtg); err != nil {
+		http.Error(w, "Meeting not found", http.StatusNotFound)
+		return
+	}
+
+	if len(parts) == 4 {
+		switch r.Method {
+		case http.MethodPost:
+			if isUserInWorkspace(userID, mtg.WorkspaceID) {
+				http.Error(w, "Workspace members do not need approval", http.StatusConflict)
+				return
+			}
+
+			request := models.MeetingJoinRequest{
+				UserID:      userID,
+				Status:      "pending",
+				RequestedAt: time.Now().UTC(),
+			}
+
+			filter := bson.M{
+				"_id": objID,
+				"joinRequests": bson.M{
+					"$not": bson.M{
+						"$elemMatch": bson.M{
+							"userId": userID,
+							"status": bson.M{"$in": []string{"pending", "approved"}},
+						},
+					},
+				},
+			}
+
+			result, err := col.UpdateOne(ctx, filter, bson.M{
+				"$push": bson.M{"joinRequests": request},
+			})
+			if err != nil {
+				http.Error(w, "Could not save join request", http.StatusInternalServerError)
+				return
+			}
+			if result.MatchedCount == 0 {
+				http.Error(w, "A pending or approved request already exists", http.StatusConflict)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(request)
+
+		case http.MethodGet:
+			if mtg.CreatedBy != userID {
+				http.Error(w, "Only the meeting creator can view requests", http.StatusForbidden)
+				return
+			}
+			requests := mtg.JoinRequests
+			if requests == nil {
+				requests = []models.MeetingJoinRequest{}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(requests)
+
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+		return
+	}
+
+	if len(parts) != 6 || r.Method != http.MethodPost {
+		http.Error(w, "Invalid request path or method", http.StatusBadRequest)
+		return
+	}
+
+	requesterID := parts[4]
+	var status string
+	switch parts[5] {
+	case "approve":
+		status = "approved"
+	case "reject":
+		status = "rejected"
+	default:
+		http.Error(w, "Unknown action", http.StatusBadRequest)
+		return
+	}
+
+	if mtg.CreatedBy != userID {
+		http.Error(w, "Only the meeting creator can decide requests", http.StatusForbidden)
+		return
+	}
+	if requesterID == "" || requesterID == userID {
+		http.Error(w, "Invalid requester", http.StatusBadRequest)
+		return
+	}
+
+	filter := bson.M{
+		"_id": objID,
+		"joinRequests": bson.M{
+			"$elemMatch": bson.M{
+				"userId": requesterID,
+				"status": "pending",
+			},
+		},
+	}
+
+	result, err := col.UpdateOne(ctx, filter, bson.M{
+		"$set": bson.M{"joinRequests.$.status": status},
+	})
+	if err != nil {
+		http.Error(w, "Could not update join request", http.StatusInternalServerError)
+		return
+	}
+	if result.MatchedCount == 0 {
+		http.Error(w, "Pending request not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"userId": requesterID,
+		"status": status,
+	})
 }

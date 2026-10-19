@@ -36,9 +36,11 @@ func corsMiddleware(next http.Handler) http.Handler {
 			"http://localhost:3000": true,
 			"http://127.0.0.1:3000": true,
 		}
+
 		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
@@ -52,7 +54,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found, using environment variables")
 	}
@@ -68,27 +69,32 @@ func main() {
 	http.HandleFunc("/api/auth/login", auth.Login)
 	http.HandleFunc("/api/auth/logout", middleware.RequireAuth(auth.Logout))
 	http.HandleFunc("/api/workspaces", middleware.RequireAuth(workspace.HandleWorkspaces))
+
 	http.HandleFunc("/api/workspaces/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		// Member-management sub-route: /api/workspaces/{id}/members
+
 		if strings.Contains(path, "/members") && !strings.Contains(path, "/rooms") {
 			workspace.AddWorkspaceMember(w, r)
 			return
 		}
+
 		if strings.Contains(path, "/rooms") {
 			room.HandleRooms(w, r)
 		} else {
 			workspace.HandleWorkspaceByID(w, r)
 		}
 	}))
+
 	http.HandleFunc("/api/rooms/", middleware.RequireAuth(room.HandleRoomByID))
 	http.HandleFunc("/api/meetings", middleware.RequireAuth(meeting.HandleMeetings))
 	http.HandleFunc("/api/messages/", middleware.RequireAuth(message.HandleMessageByID))
 	http.HandleFunc("/api/messages", middleware.RequireAuth(message.HandleMessages))
 	http.HandleFunc("/api/tasks/", middleware.RequireAuth(task.HandleTaskByID))
 	http.HandleFunc("/api/tasks", middleware.RequireAuth(task.HandleTasks))
+
 	http.HandleFunc("/api/polls/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
+
 		if strings.Contains(path, "/vote") {
 			poll.HandlePollVote(w, r)
 		} else if strings.Contains(path, "/close") {
@@ -97,7 +103,9 @@ func main() {
 			poll.HandlePollByID(w, r)
 		}
 	}))
+
 	http.HandleFunc("/api/polls", middleware.RequireAuth(poll.HandlePolls))
+
 	http.HandleFunc("/api/presence/", middleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
 			presence.UpdatePresenceStatus(w, r)
@@ -105,14 +113,19 @@ func main() {
 			presence.GetPresence(w, r)
 		}
 	}))
+
 	http.HandleFunc("/api/presence", middleware.RequireAuth(presence.HandlePresence))
 	http.HandleFunc("/api/analytics", middleware.RequireAuth(analytics.HandleAnalytics))
 	http.HandleFunc("/api/gaming/", middleware.RequireAuth(gaming.HandleGamingByID))
 	http.HandleFunc("/api/gaming", middleware.RequireAuth(gaming.HandleGaming))
+
 	http.HandleFunc("/api/meetings/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
+
 		if strings.Contains(path, "/ws") {
 			signaling.HandleWS(hub, w, r)
+		} else if strings.Contains(path, "/join-requests") {
+			middleware.RequireAuth(meeting.HandleMeetingJoinRequests)(w, r)
 		} else if strings.Contains(path, "/transcript") {
 			middleware.RequireAuth(transcript.HandleTranscript)(w, r)
 		} else {
@@ -127,8 +140,7 @@ func main() {
 
 	fmt.Println("VOW backend running on :" + port)
 
-	err := http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux))
-	if err != nil {
+	if err := http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux)); err != nil {
 		fmt.Println("Server error:", err)
 	}
 }
